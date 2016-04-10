@@ -1,0 +1,6 @@
+selenium:
+  image: selenium/standalone-chrome
+scrape:
+  build: .
+  links:
+    - selenium:selenium
