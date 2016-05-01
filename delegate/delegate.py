@@ -1,10 +1,13 @@
 import asana
 import constants
 
-# Create class Delegator that accepts a list of tasks to delegate
-# Task format is {'project': [project_id], 'name': str_task_name, 'assignee': 'email'}
-
 class Delegator(object):
+    """Delegates a list of tasks as CEO to Max or Will
+
+    Task input should be a dictionary with the following fields:
+    name (str), project (list of IDs), assignee (str, an email). Only
+    name is required.
+    """
 
     def __init__(self, tasks=[]):
         self.tasks = tasks
