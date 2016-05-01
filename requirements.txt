@@ -1,0 +1,5 @@
+asana==0.5.1
+oauthlib==1.1.0
+requests==2.9.2
+requests-oauthlib==0.6.1
+six==1.10.0
