@@ -1,5 +1,6 @@
 import asana
 import constants
+import common
 
 class Delegator(object):
     """Delegates a list of tasks as CEO to Max or Will
@@ -12,10 +13,7 @@ class Delegator(object):
     def __init__(self, tasks=[]):
         self.tasks = tasks
         self.created_tasks = []
-        self.asana = self.build_asana_client()
-
-    def build_asana_client(self):
-        return asana.Client.access_token(constants.CEO_ACCESS_TOKEN)
+        self.asana = common.build_asana_client()
 
     def assign_task_owners(self):
         #TODO: Add a more interesting task assignment mechanism
