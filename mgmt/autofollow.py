@@ -10,6 +10,10 @@ has been created.
 import asana
 import constants
 import common
+import datetime
+from pytz import timezone
+
+time_interval = 1 # day
 
 def autofollow():
 
@@ -17,13 +21,22 @@ def autofollow():
     projects = client.projects.find_all({"workspace": constants.WORKSPACE_ID})
     task_list = []
 
+    modified_since_dt = (datetime.datetime.now(timezone("US/Pacific")) -
+                            datetime.timedelta(days=time_interval))
+    modified_since_dt = modified_since_dt.replace(microsecond=0)
+    modified_since_str = modified_since_dt.isoformat()
+
+    # We can't get a list of all tasks in a workspace without either specifying
+    # the projects the tasks are in or who the tasks are assigned to.
     for project in projects:
-        tasks = list(client.tasks.find_all({"project": project["id"]}))
+        data = {"project": project["id"], "modified_since": modified_since_str}
+        tasks = list(client.tasks.find_all(data))
         task_list += tasks
 
-    for task in task_list:
-        client.tasks.add_followers(task["id"], {"followers":
-                                                [constants.CEO_USER_ID]})
+    if task_list:
+        for task in task_list:
+            client.tasks.add_followers(task["id"], {"followers":
+                                                    [constants.CEO_USER_ID]})
 
 if __name__ == "__main__":
     autofollow()
