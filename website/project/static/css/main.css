@@ -1,5 +1,13 @@
 /* Main stylesheet */
 
+@font-face {
+    font-family: 'CPMono_v07';
+    src: url('cpmono_v07_light-webfont-webfont.woff2') format('woff2'),
+         url('cpmono_v07_light-webfont-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
 html {
   height: 100%;
 }
@@ -10,6 +18,15 @@ body {
   color: #eee;
   /*padding-top: 75px;*/
   /*padding-bottom: 20px;*/
+}
+h1 {
+  font-family: "CPMono_v07";
+  text-shadow: 2px 2px #444;
+  font-size: 4em;
+  margin-bottom: 1em;
+}
+h4 {
+  margin-bottom: 1.5em;
 }
 
 .admin_table {
@@ -24,7 +41,7 @@ body {
 .background-img {
     height: 100%;
     width: 100%;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0)) no-repeat, url('../img/landing_page.jpg') no-repeat center center fixed;
+    background: #666 url('../img/landing_page.jpg') no-repeat center center fixed;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
@@ -39,4 +56,50 @@ body {
 .footer {
   position: absolute;
   bottom: 0;
+  color: #AAA;
+  font-weight: 200;
+}
+
+#btn-submit {
+  font-size: 24px;
+  font-weight: 200;
+  padding: 15px 30px;
+  background: #8c3338;
+  border: 1px solid #8c3338;
+  margin-left: 5px;
+  vertical-align: top;
+  transition: box-shadow 0.7s ease;
+  transition: top 0.1s ease;
+  position: relative;
+  top: 0;
+}
+#email {
+  padding: 15px;
+  font-size: 24px;
+  border-color: white;
+  border-style: solid;
+  color: black;
+}
+
+@media screen and (min-width: 501px) {
+  #btn-submit:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    top: -1px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  body {
+    font-size: 12px;
+  }
+  #email {
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 1);
+  }
+  #btn-submit {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 1);
+  }
 }

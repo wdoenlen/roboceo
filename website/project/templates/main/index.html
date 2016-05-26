@@ -4,28 +4,13 @@
 {% block content %}
 
 <div id="main">
-
-  <h1>Tired of running your company?</h1>
-    <br>
-    <p>
-      Executive Machine's cutting-edge CEO-as-a-service, Machine Executive, is coming soon. Sign up with your email below to receive updates. As a preview of Machine Executive's extraordinary management capabilities, we'll include a unique task created by Machine Executive when you sign up -- for free!
-    </p>
-    <br>
+  <h1>Your CEO is about to become obsolete.</h1>
 
   <form class="form-email" role="form" method="post" action="/">
     {{ form.csrf_token }}
-    <p>
-    <h4>Enter your email below to receive updates</h4>
-    <br>
-    {{ form.email(placeholder="email@address.com") }}
-    <span class="error">
-      {% if form.email.errors %}
-        {% for error in form.email.errors %}
-          {{ error }}
-        {% endfor %}
-      {% endif %}
-    </span>
-    <button class="btn btn-success btn-sm" id="btn-submit" type="submit">Submit</button>
+    <h4>Overthrow your CEO. Join the <em>Machine Executive</em> revolution today:</h4>
+    {{ form.email(placeholder="Your email") }}
+    <button class="btn btn-success btn-sm" id="btn-submit" type="submit">Learn More</button>
     </p>
   </form>
 
