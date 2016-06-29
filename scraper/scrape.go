@@ -115,17 +115,17 @@ window.fetchEventPage = fetchEventPage;
 `
 
 func login(wd selenium.WebDriver, username, password string) error {
-	email, err := wd.FindElement(selenium.ById, "email")
+	email, err := wd.FindElement(selenium.ByID, "email")
 	if err != nil {
 		return fmt.Errorf("login: %v", err)
 	}
 
-	pass, err := wd.FindElement(selenium.ById, "pass")
+	pass, err := wd.FindElement(selenium.ByID, "pass")
 	if err != nil {
 		return fmt.Errorf("login: %v", err)
 	}
 
-	submit, err := wd.FindElement(selenium.ByCSSSelector, "#loginbutton input")
+	form, err := wd.FindElement(selenium.ByCSSSelector, "#login_form")
 	if err != nil {
 		return fmt.Errorf("login: %v", err)
 	}
@@ -138,7 +138,7 @@ func login(wd selenium.WebDriver, username, password string) error {
 		return fmt.Errorf("login: %v", err)
 	}
 
-	if err := submit.Click(); err != nil {
+	if err := form.Submit(); err != nil {
 		return fmt.Errorf("login: %v", err)
 	}
 
@@ -146,7 +146,7 @@ func login(wd selenium.WebDriver, username, password string) error {
 }
 
 func verifyOnWelcomePage(wd selenium.WebDriver) error {
-	if _, err := wd.FindElement(selenium.ById, "loginbutton"); err == nil {
+	if _, err := wd.FindElement(selenium.ByID, "loginbutton"); err == nil {
 		src, _ := wd.PageSource()
 		return fmt.Errorf("unexpected page source:\n%s\n", src)
 	}

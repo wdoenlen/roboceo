@@ -1,0 +1,89 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/Masterminds/squirrel",
+			"repository": "https://github.com/Masterminds/squirrel",
+			"vcs": "git",
+			"revision": "ef37c531bf2d8443632ee11c8e5760101b4bea28",
+			"branch": "v1",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/lann/builder",
+			"repository": "https://github.com/lann/builder",
+			"vcs": "git",
+			"revision": "f22ce00fd9394014049dad11c244859432bd6820",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/lann/ps",
+			"repository": "https://github.com/lann/ps",
+			"vcs": "git",
+			"revision": "62de8c46ede02a7675c4c79c84883eb164cb71e3",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/mattn/go-sqlite3",
+			"repository": "https://github.com/mattn/go-sqlite3",
+			"vcs": "git",
+			"revision": "7204887cf3a42df1cfaa5505dc3a3427f6dded8b",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/tebeka/selenium",
+			"repository": "https://github.com/tebeka/selenium",
+			"vcs": "git",
+			"revision": "b20da02d25df5878be83d1c4b04e5147a6510753",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/net/context",
+			"repository": "https://go.googlesource.com/net",
+			"vcs": "git",
+			"revision": "2a35e686583654a1b89ca79c4ac78cb3d6529ca3",
+			"branch": "master",
+			"path": "/context",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/oauth2",
+			"repository": "https://go.googlesource.com/oauth2",
+			"vcs": "git",
+			"revision": "e86e2718db89775a4604abc10a5d3a5672e7336e",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/oauth2/facebook",
+			"repository": "https://go.googlesource.com/oauth2",
+			"vcs": "git",
+			"revision": "e86e2718db89775a4604abc10a5d3a5672e7336e",
+			"branch": "master",
+			"path": "/facebook",
+			"notests": true
+		},
+		{
+			"importpath": "google.golang.org/cloud/compute/metadata",
+			"repository": "https://code.googlesource.com/gocloud",
+			"vcs": "git",
+			"revision": "5f3c6b769982b139bd7e06c4e49bc86b29b97997",
+			"branch": "master",
+			"path": "/compute/metadata",
+			"notests": true
+		},
+		{
+			"importpath": "google.golang.org/cloud/internal",
+			"repository": "https://code.googlesource.com/gocloud",
+			"vcs": "git",
+			"revision": "5f3c6b769982b139bd7e06c4e49bc86b29b97997",
+			"branch": "master",
+			"path": "/internal",
+			"notests": true
+		}
+	]
+}

@@ -1,0 +1,374 @@
+<html>
+<head>
+	<title>Events</title>
+	<style>
+	body {
+		font-family: "Helvetica Neue", helvetica, sans-serif;
+        background: #EEE;
+        padding: 0;
+        margin: 0;
+	}
+    #container {
+        width: 700px;
+        margin: 1em 20px;
+    }
+    #map {
+        width: 500px;
+        height: 300px;
+        position: fixed;
+        left: 740px;
+        top: 20px;
+        background: #AAA;
+    }
+    #result-container {
+        background: white;
+        padding: 1em 30px 3em 20px;
+    }
+	.event {
+		margin: 0.5em 0;
+		clear: left;
+        padding-left: 215px;
+        position: relative;
+        min-height: 110px;
+        border-bottom: solid #eee 1px;
+	}
+    .event:last-child {
+        border-bottom: none;
+    }
+	.time {
+		height: 2em;
+		margin-right: 20px;
+        color: #444;
+	}
+    .name {
+        display: block;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        margin-bottom: 0.5em;
+    }
+    .name a {
+        color: black;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .name a:hover {
+        text-decoration: underline;
+    }
+    .cover-photo img {
+        width: 200px;
+        height: 100px;
+        object-fit: cover;
+        object-position: center;
+        position: absolute;
+        left: 0;
+    }
+    .desc {
+        display: block;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        max-height: 2.3em;
+        margin-bottom: 0.5em;
+        color: #666;
+    }
+    #loading {
+        text-align: center;
+        color: #999;
+        padding: 3em 0;
+    }
+    .spacer {
+        height: 6em;
+        background: #EEE;
+        margin-right: -30px;
+        margin-left: -20px;
+    }
+    #controls {
+        margin-bottom: 1em;
+        height: 50px;
+        display: flex;
+    }
+    #update {
+        flex: 1;
+        background: white;
+        border: solid #EEE 1px;
+    }
+    #start, #end {
+        flex: 1;
+        font-size: 18px;
+        padding: 0 5px;
+        margin-right: 20px;
+    }
+	</style>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.20.1/mapbox-gl.css' rel='stylesheet' />
+
+</head>
+<body>
+    <div id="map"></div>
+	<div id="container">
+        <div id="controls">
+            <input type="text" id="start">
+            <input type="text" id="end">
+            <input type="submit" id="update" value="Update">
+        </div>
+        <div id="result-container">
+            <div id="results"></div>
+            <div id="loading"></div>
+        </div>
+    </div>
+	<script src="underscore.js"></script>
+	<script>
+
+var Global = {
+    map: null,
+    data: null,
+};
+
+var $end = document.getElementById('end');
+var $loading = document.getElementById('loading');
+var $results = document.getElementById('results');
+var $start = document.getElementById('start');
+var $update = document.getElementById('update');
+
+function pad(d) {
+    return ('00000' + d).slice(-2);
+}
+
+var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function formatTime(time) {
+    var t = new Date(Date.parse(time))
+    return months[t.getMonth()] + ' ' + pad(t.getDate()) +
+        '  ' + pad(t.getHours()) + ':' + pad(t.getMinutes());
+}
+
+var tmpl = _.template([
+    '<a class="cover-photo" href="http://facebook.com/<%= id %>" target="_blank">',
+        '<img src="<%= cover.source %>">',
+    '</a>',
+    '<div class="info">',
+        '<span class="name">',
+            '<a href="http://facebook.com/<%= id %>" target="_blank"><%= name %></a>',
+        '</span>',
+        '<span class="desc"><%- description %></span>',
+        '<span class="time">',
+            '<%= formatTime(start_time) %>',
+            ' - ',
+            '<%= end_time ? formatTime(end_time) : "" %>',
+        '</span>',
+    '</div>',
+].join(''));
+
+function renderEvent(event) {
+    event.cover = event.cover || {};
+    event.description = event.description || '';
+    event.end_time = event.end_time || null;
+
+    var div = document.createElement('div');
+    div.className = 'event';
+    div.innerHTML = tmpl(event);
+    return div;
+}
+
+function render(data) {
+    $results.innerHTML = '';
+    $loading.innerHTML = '';
+
+    var sorted = data.sort(function(a, b) {
+        return Date.parse(a.start_time) - Date.parse(b.start_time);
+    });
+
+    var nextEvent = null;
+    for (var i = 0; i < sorted.length; i++) {
+        var event = sorted[i];
+
+        if (i > 0) {
+            var prev = sorted[i - 1];
+
+            var prevStart = new Date(Date.parse(prev.start_time));
+            var thisStart = new Date(Date.parse(event.start_time));
+            if (prevStart.getDay() != thisStart.getDay()) {
+                var spacer = document.createElement('div');
+                spacer.className = 'spacer';
+                $results.appendChild(spacer);
+            }
+        }
+
+        var div = renderEvent(event);
+        $results.appendChild(div);
+
+        var startTime = Date.parse(event.start_time);
+        if (!nextEvent && startTime > Date.now()) {
+            nextEvent = div;
+        }
+    }
+
+    setTimeout(function() {
+    	if (!nextEvent) {
+    		return;
+    	}
+        window.scroll(0, nextEvent.offsetTop - 50);
+    }, 0);
+
+}
+
+function inBB(lng0, lat0, lng1, lat1, event) {
+	if (!event.place || !event.place.location) {
+		return false;
+	}
+	var lat = event.place.location.latitude;
+	var lng = event.place.location.longitude;
+	return lat >= lat0 && lat <= lat1 && lng >= lng0 && lng <= lng1;
+}
+
+function inBetweenMilesAndI(event) {
+	return inBB(121.438408,25.090107,121.557884,25.176825, event);
+}
+
+function dateString(date) {
+    return date.getDate() + '-' + date.getMonth() + '-' + date.getYear();
+}
+function isToday(event) {
+    var date = new Date(Date.parse(event.start_time));
+    var today = new Date();
+    return dateString(today) === dateString(date);
+}
+function midnight(date) {
+    var time = date ? date.getTime() : Date.now();
+    var d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+function updateEvents(startTime, endTime) {
+    var url = '/events'
+        + '?start=' + startTime.toJSON()
+        + '&end=' + endTime.toJSON()
+        // + '&bb=24.7901,121.2827,25.2444,121.7301'
+        + '&bb=21.79119.83,25.53,122.24';
+
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function(e) {
+        var resp = JSON.parse(xhr.responseText);
+        Global.data = resp;
+        render(resp);
+        updateMap();
+    };
+    xhr.onerror = function(e) {
+        $loading.innerText = 'Load error';
+    }
+    xhr.open('GET', url, true);
+    xhr.send(null);
+
+    $results.innerHTML = '';
+    $loading.innerText = 'Loading...';
+}
+
+var DAY = DAYS = 1000 * 60 * 60 * 24;
+var today = new Date(midnight().getTime() + 0 * DAYS);
+var tomorrow = new Date(midnight().getTime() + 1 * DAY);
+
+$start.value = today.toString();
+$end.value = tomorrow.toString();
+
+function updateFromUI() {
+    try {
+        var start = new Date(Date.parse($start.value));
+        var end = new Date(Date.parse($end.value));
+        updateEvents(start, end);
+    } catch(e) {
+        alert(e.message);
+    }
+}
+
+updateFromUI();
+$update.addEventListener('click', updateFromUI, false);
+
+function updateMap() {
+    if (!Global.data || !Global.source) {
+        return;
+    }
+
+    var features = Global.data
+    .filter(function(event) {
+        return event.place && event.place.location;
+    })
+    .map(function(event) {
+        var location = event.place.location;
+        return {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [location.longitude, location.latitude,],
+            },
+            properties: {
+              title: event.name,
+              url: 'http://facebook.com/' + event.id,
+            },
+        };
+    });
+
+    var geojson = {
+        "type": "FeatureCollection",
+        "features": features,
+    };
+
+    Global.source.setData(geojson);
+}
+
+	</script>
+
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.20.1/mapbox-gl.js'></script>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoibWF4aGF3a2lucyIsImEiOiJlMzU3MGM3NjJhMDBiYWMwYWNiYzgyOTEzNjUwYWVmMiJ9.V9S2blLBpSk6TFpmPpxQgA';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            center: [121.5654, 25.0330],
+            zoom: 10,
+            style: 'mapbox://styles/mapbox/streets-v9'
+        });
+
+        map.on('load', function() {
+
+            Global.source = new mapboxgl.GeoJSONSource({
+                "type": "geojson",
+                "data": {
+                    "type": "FeatureCollection",
+                    "features": [],
+                },
+            });
+
+            map.addSource("markers", Global.source);
+
+            map.addLayer({
+                "id": "markers",
+                "type": "symbol",
+                "source": "markers",
+                "layout": {
+                    "icon-image": "circle-15",
+                    "text-field": "{title}",
+                    "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+                    "text-offset": [0, 0.6],
+                    "text-anchor": "top"
+                }
+            });
+
+            map.on('click', function (e) {
+                var features = map.queryRenderedFeatures(e.point, { layers: ['markers'] });
+
+                if (!features.length) {
+                    return;
+                }
+
+                var feature = features[0];
+
+                window.open(feature.properties.url)
+            });
+
+            updateMap();
+        });
+
+
+
+    </script>
+</body>
+</html>
