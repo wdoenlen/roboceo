@@ -1,5 +1,5 @@
 asana==0.5.1
-oauthlib==1.1.0
+oauthlib==1.1.1
 pytz==2016.4
 requests==2.9.2
 requests-oauthlib==0.6.1
