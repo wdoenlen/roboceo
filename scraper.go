@@ -1,8 +1,7 @@
 package main
 
 import (
-	"database/sql"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -16,9 +15,9 @@ import (
 )
 
 type Scraper struct {
-	db            *sql.DB
+	db            *DB
 	webdriverAddr string
-	apiClient     *http.Client
+	oauthProvider *OAuthProvider
 	FBUsername    string
 	FBPassword    string
 }
@@ -35,7 +34,28 @@ func (s *Scraper) Scrape(req *ScrapeRequest) error {
 	}
 	defer wd.Quit()
 
-	placeID, err := graphapi.GetPlaceID(s.apiClient, req.Location)
+	authURL, clientChan := s.oauthProvider.RequestClient()
+
+	if err := scraper.EnsureLoggedIn(wd, s.FBUsername, s.FBPassword); err != nil {
+		return err
+	}
+
+	if err := wd.Get(authURL); err != nil {
+		return err
+	}
+
+	var apiClient *http.Client
+	select {
+	case apiClient = <-clientChan:
+		if apiClient == nil {
+			return errors.New("failed to get api client")
+		}
+		break
+	case <-time.After(20 * time.Second):
+		return errors.New("timed out waiting for oauth token")
+	}
+
+	placeID, err := graphapi.GetPlaceID(apiClient, req.Location)
 	if err != nil {
 		return err
 	}
@@ -49,14 +69,14 @@ func (s *Scraper) Scrape(req *ScrapeRequest) error {
 	events := make(chan graphapi.Event)
 
 	go func() {
-		if err := scraper.GetAllEvents(wd, todayURL, s.FBUsername, s.FBPassword, ids); err != nil {
+		if err := scraper.GetAllEvents(wd, todayURL, ids); err != nil {
 			log.Println(err)
 		}
 		close(ids)
 	}()
 
 	getEvents := func(ids []string) {
-		result, err := graphapi.GetEvents(s.apiClient, ids)
+		result, err := graphapi.GetEvents(apiClient, ids)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "GetEvents:", err)
 			return
@@ -84,33 +104,7 @@ func (s *Scraper) Scrape(req *ScrapeRequest) error {
 	}()
 
 	for event := range events {
-		var e struct {
-			ID        string `json:"id"`
-			StartTime FBTime `json:"start_time"`
-			EndTime   FBTime `json:"end_time"`
-			Place     struct {
-				Location struct {
-					Latitude  float64 `json:"latitude"`
-					Longitude float64 `json:"longitude"`
-				} `json:"location"`
-			} `json:"place"`
-		}
-		if err := json.Unmarshal([]byte(*event), &e); err != nil {
-			return err
-		}
-
-		_, err := s.db.Exec(`INSERT OR REPLACE INTO events
-			(id, data, start_time, end_time, latitude, longitude)
-			VALUES
-			(?, ?, ?, ?, ?, ?)`,
-			e.ID,
-			string(*event),
-			time.Time(e.StartTime).UTC(),
-			time.Time(e.EndTime).UTC(),
-			e.Place.Location.Latitude,
-			e.Place.Location.Longitude,
-		)
-		if err != nil {
+		if err := s.db.SaveEvent(event); err != nil {
 			return err
 		}
 	}

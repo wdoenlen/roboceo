@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -10,11 +9,8 @@ import (
 	"os"
 	"time"
 
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2/clientcredentials"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/facebook"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
@@ -23,51 +19,44 @@ func main() {
 		clientSecret  = flag.String("client_secret", "876f827f013b130184ec39cbd836069e", "")
 		username      = flag.String("username", "throwaway.wh@gmail.com", "")
 		password      = flag.String("password", "scrapescrape", "")
-		dbAddr        = flag.String("db", "app.db", "sqlite db location")
+		dbPath        = flag.String("db", "app.db", "sqlite db location")
 		port          = flag.Int("port", 8080, "http port")
 		webdriverAddr = flag.String("webdriver_addr", "0.0.0.0:4444", "address of webdriver instance")
+		redirectAddr  = flag.String("redirect_addr", ":3545", "")
+		redirectURL   = flag.String("redirect_url", "http://127.0.0.1:3545/", "")
 	)
 	flag.Parse()
 
 	rand.Seed(time.Now().UnixNano())
 
-	db, err := sql.Open("sqlite3", *dbAddr)
+	db, err := NewDB(*dbPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS events (
-		id TEXT PRIMARY KEY,
-		data TEXT NOT NULL,
-		start_time TIMESTAMP,
-		end_time TIMESTAMP,
-		latitude DOUBLE,
-		longitude DOUBLE)`)
+	conf := &oauth2.Config{
+		ClientID:     *clientID,
+		ClientSecret: *clientSecret,
+		Endpoint:     facebook.Endpoint,
+	}
+
+	provider, err := NewOAuthProvider(*conf, *redirectAddr, *redirectURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	conf := clientcredentials.Config{
-		ClientID:     *clientID,
-		ClientSecret: *clientSecret,
-		TokenURL:     facebook.Endpoint.TokenURL,
-	}
-	client := conf.Client(context.Background())
-
 	scraper := &Scraper{
 		db:            db,
 		webdriverAddr: *webdriverAddr,
-		apiClient:     client,
+		oauthProvider: provider,
 		FBUsername:    *username,
 		FBPassword:    *password,
 	}
 
-	dbWrap := &DB{db}
-
 	api := &API{
 		scraper: scraper,
-		db:      dbWrap,
+		db:      db,
 	}
 
 	http.Handle("/", http.FileServer(http.Dir("www")))

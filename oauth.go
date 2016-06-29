@@ -1,128 +1,104 @@
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
-	"hash/fnv"
-	"log"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
-	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 )
 
-func osUserCacheDir() string {
-	switch runtime.GOOS {
-	case "darwin":
-		return filepath.Join(os.Getenv("HOME"), "Library", "Caches")
-	case "linux", "freebsd":
-		return filepath.Join(os.Getenv("HOME"), ".cache")
+type OAuthProvider struct {
+	config   oauth2.Config
+	listener net.Listener
+
+	promisesMu sync.Mutex
+	promises   map[string]chan *http.Client
+}
+
+func (o *OAuthProvider) deliverCode(state, code string) {
+	o.promisesMu.Lock()
+	defer o.promisesMu.Unlock()
+
+	fmt.Printf("code %q, state %q", code, state)
+
+	promise, ok := o.promises[state]
+	if !ok {
+		fmt.Fprintf(os.Stderr, "received code for invalid state %q\n", state)
+		return
 	}
-	log.Printf("TODO: osUserCacheDir on GOOS %q", runtime.GOOS)
-	return "."
+
+	token, err := o.config.Exchange(context.Background(), code)
+	if err != nil {
+		close(promise)
+		fmt.Fprintln(os.Stderr, "[error]", err)
+		return
+	}
+
+	client := o.config.Client(context.Background(), token)
+
+	promise <- client
+	close(promise)
 }
 
-func tokenCacheFile(config *oauth2.Config) string {
-	hash := fnv.New32a()
-	hash.Write([]byte(config.ClientID))
-	hash.Write([]byte(config.ClientSecret))
-	hash.Write([]byte(strings.Join(config.Scopes, " ")))
-	fn := fmt.Sprintf("go-api-demo-tok%v", hash.Sum32())
-	return filepath.Join(osUserCacheDir(), url.QueryEscape(fn))
+func (o *OAuthProvider) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	state := r.FormValue("state")
+	code := r.FormValue("code")
+
+	if state == "" {
+		http.Error(w, "no state received", http.StatusBadRequest)
+		return
+	}
+	if code == "" {
+		http.Error(w, "no code received", http.StatusBadRequest)
+		return
+	}
+
+	go o.deliverCode(state, code)
+
+	fmt.Fprintln(w, "login token received")
 }
 
-func tokenFromFile(file string) (*oauth2.Token, error) {
-	f, err := os.Open(file)
+func (o *OAuthProvider) Close() error {
+	if err := o.listener.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (o *OAuthProvider) RequestClient() (string, chan *http.Client) {
+	o.promisesMu.Lock()
+	defer o.promisesMu.Unlock()
+
+	randState := fmt.Sprintf("st%d", time.Now().UnixNano())
+
+	replyChan := make(chan *http.Client)
+	o.promises[randState] = replyChan
+
+	authURL := o.config.AuthCodeURL(randState)
+
+	return authURL, replyChan
+}
+
+func NewOAuthProvider(config oauth2.Config, addr, remoteURL string) (*OAuthProvider, error) {
+	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
-	t := new(oauth2.Token)
-	err = gob.NewDecoder(f).Decode(t)
-	return t, err
-}
 
-func openURL(url string) {
-	try := []string{"xdg-open", "google-chrome", "open"}
-	for _, bin := range try {
-		err := exec.Command(bin, url).Run()
-		if err == nil {
-			return
-		}
-	}
-	log.Printf("Error opening URL in browser.")
-}
+	config.RedirectURL = remoteURL
 
-func saveToken(file string, token *oauth2.Token) {
-	f, err := os.Create(file)
-	if err != nil {
-		log.Printf("Warning: failed to cache oauth token: %v", err)
-		return
-	}
-	defer f.Close()
-	gob.NewEncoder(f).Encode(token)
-}
-
-func newOAuthClient(ctx context.Context, config *oauth2.Config) *http.Client {
-	cacheFile := tokenCacheFile(config)
-	token, err := tokenFromFile(cacheFile)
-	if err != nil || (time.Now().After(token.Expiry) && token.RefreshToken == "") {
-		token = tokenFromWeb(ctx, config)
-		saveToken(cacheFile, token)
-	} else {
-		// log.Printf("Using cached token %#v from %q", token, cacheFile)
+	provider := &OAuthProvider{
+		config:   config,
+		listener: l,
+		promises: make(map[string]chan *http.Client),
 	}
 
-	return config.Client(ctx, token)
-}
+	go http.Serve(l, provider)
 
-func tokenFromWeb(ctx context.Context, config *oauth2.Config) *oauth2.Token {
-	ch := make(chan string)
-	randState := fmt.Sprintf("st%d", time.Now().UnixNano())
-
-	l, err := net.Listen("tcp", ":3545")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	go http.Serve(l, http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		if req.URL.Path == "/favicon.ico" {
-			http.Error(rw, "", 404)
-			return
-		}
-		if req.FormValue("state") != randState {
-			log.Printf("State doesn't match: req = %#v", req)
-			http.Error(rw, "", 500)
-			return
-		}
-		if code := req.FormValue("code"); code != "" {
-			fmt.Fprintf(rw, "<h1>Success</h1>Authorized.")
-			rw.(http.Flusher).Flush()
-			ch <- code
-			return
-		}
-		log.Printf("no code")
-		http.Error(rw, "", 500)
-	}))
-	defer l.Close()
-
-	config.RedirectURL = "http://127.0.0.1:3545/"
-	authURL := config.AuthCodeURL(randState)
-	go openURL(authURL)
-	log.Printf("Authorize this app at: %s", authURL)
-	code := <-ch
-	log.Printf("Got code: %s", code)
-
-	token, err := config.Exchange(ctx, code)
-	if err != nil {
-		log.Fatalf("Token exchange error: %v", err)
-	}
-	return token
+	return provider, nil
 }
