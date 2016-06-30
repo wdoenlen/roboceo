@@ -1,0 +1,20 @@
+{
+	"preset": "default",
+	"plugins": [
+		"esformatter-jsx",
+    "esformatter-quotes",
+    "esformatter-braces",
+    "esformatter-curly"
+	],
+  "jsx": {
+    "formatJSX": true,
+    "attrsOnSameLineAsTag": false, 
+    "maxAttrsOnTag": 1,
+    "firstAttributeOnSameLine": false,
+    "alignWithFirstAttribute": false
+  },
+  "quotes": {
+    "type": "single",
+    "avoidEscape": false
+  }
+}
