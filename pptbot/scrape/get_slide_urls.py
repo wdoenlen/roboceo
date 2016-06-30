@@ -12,5 +12,7 @@ for word in fileinput.input():
 	if len(candidates) == 0:
 		continue
 	preso = random.sample(candidates, 1)[0]
-	for url in slideshare.get_slide_urls(preso):
+	urls, transcript = slideshare.get_slide_urls(preso)
+	for url in urls:
 		print url
+	print transcript

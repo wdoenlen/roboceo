@@ -26,10 +26,11 @@ def get_slide_urls(preso_url):
 	if resp.status_code != 200:
 		raise StandardError("get_slide_urls: bad response %d" % resp.status_code)
 	doc = lxml.html.fromstring(resp.text)
-	results = []
+	slide_urls = []
 	for img in doc.cssselect('img.slide_image'):
 		img_href = img.get('data-full')
 		href_parts = urlsplit(img_href)
 		without_query = urlunsplit(href_parts[0:3] + ('', ''))
-		results.append(without_query)
-	return results
+		slide_urls.append(without_query)
+	transcript = doc.cssselect('#notes-panel')[0].text_content()
+	return [slide_urls, transcript]
