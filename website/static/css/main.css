@@ -38,7 +38,7 @@ h4 {
   margin-bottom: 3px;
 }
 
-.background-img {
+body {
     height: 100%;
     width: 100%;
     background: #666 url('../img/landing_page.jpg') no-repeat center center fixed;
