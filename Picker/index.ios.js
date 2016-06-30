@@ -231,12 +231,11 @@ class PickTypesPage extends Component {
 
 class LoadingPage extends Component {
   render() {
-    return (<View style={ [styles.container, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#990213' }] }>
+    return (<View style={ [styles.container, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#50E3C2' }] }>
               <ActivityIndicator
-                color="white"
                 size="large"
                 style={ { margin: 20 } } />
-              <Text style={ { color: 'white' } }>
+              <Text>
                 Loading...
               </Text>
             </View>);
