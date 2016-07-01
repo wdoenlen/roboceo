@@ -1,0 +1,6 @@
+placepicker:
+  build: services/placepicker
+  env_file: .env
+  ports:
+    - 8001:5000
+  restart: always

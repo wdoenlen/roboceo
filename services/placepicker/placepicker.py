@@ -16,16 +16,16 @@ API_KEY = ""
 
 class PlacePicker(object):
 
-    def __init__(self, lat, lng, radius=1500, place_types=[]):
+    def __init__(self, lat, lng, radius=1500, place_types=[], places_api=GooglePlaces(API_KEY)):
         self.lat = lat
         self.lng = lng
         self.radius = radius
         self.place_types = place_types
-        self.google_places = GooglePlaces(API_KEY)
+        self.google_places = places_api
         self.next_destination = None
 
     def get_nearby(self, rankby=None):
-        if self.place_types and rankby in [ranking.DISTANCE, ranking.RATING]:
+        if self.place_types and rankby in [ranking.DISTANCE, ranking.PROMINENCE]:
             return self.google_places.nearby_search(lat_lng={"lat": self.lat,
                                                             "lng": self.lng},
                                                     radius=self.radius,
