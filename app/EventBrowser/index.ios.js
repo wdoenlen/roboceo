@@ -1,41 +1,42 @@
 import React, { Component } from 'react';
-import { AppRegistry, Linking, Image, StyleSheet, Text, View, MapView, AsyncStorage, ScrollView, Navigator, DatePickerIOS, ActivityIndicator, TouchableHighlight, TouchableOpacity, } from 'react-native';
+import {
+  AppRegistry,
+  Linking,
+  Image,
+  StyleSheet,
+  Text,
+  View,
+  MapView,
+  AsyncStorage,
+  ScrollView,
+  Navigator,
+  DatePickerIOS,
+  ActivityIndicator,
+  TouchableHighlight,
+  TouchableOpacity,
+} from 'react-native';
 
 import moment from 'moment';
 
 class Row extends Component {
   render() {
     var event = this.props.event;
-    return (<View style={ {
-        flexDirection: 'row',
-        padding: 10,
-        paddingTop: 20,
-        paddingBottom: 20,
-        flex: 1,
-        borderColor: '#DDD',
-        borderBottomWidth: 1
-      }}>
-              <View style={ {
-        flex: 1
-      }}>
+    return (<View style={ { flexDirection: 'row', padding: 10, paddingTop: 20, paddingBottom: 20, flex: 1, borderColor: '#DDD', borderBottomWidth: 1 } }>
+              <View style={ { flex: 1 } }>
                 <View>
                   <Text
-      numberOfLines={ 1 }
-      style={ {
-        fontWeight: '500'
-      }}>
+                    numberOfLines={ 1 }
+                    style={ { fontWeight: '500' } }>
                     { event.name }
                   </Text>
                 </View>
                 <View>
                   <Text>
-                    { moment(event.start_time).local().format('MMM DD hh:mm')} -
+                    { moment(event.start_time).local().format('MMM DD hh:mm') } -
                     { event.end_time ? moment(event.end_time).local().format('MMM DD hh:mm') : null }
                   </Text>
                 </View>
-                <View style={ {
-        marginTop: 10
-      }}>
+                <View style={ { marginTop: 10 } }>
                   <Text numberOfLines={ 1 }>
                     { event.description }
                   </Text>
@@ -43,18 +44,12 @@ class Row extends Component {
               </View>
               <View>
                 <TouchableOpacity
-      onPress={ () => {
-        Linking.openURL(`fb://event?id=${event.id}`)
-          .catch(() => Linking.openURL(`https://facebook.com/${event.id}`))
-      }}
-      style={ {
-        paddingLeft: 20,
-        paddingRight: 20,
-        alignItems: 'center'
-      }}>
-                  <Text style={ {
-        fontSize: 40
-      }}>
+                  onPress={ () => {
+                              Linking.openURL(`fb://event?id=${event.id}`)
+                                .catch(() => Linking.openURL(`https://facebook.com/${event.id}`))
+                            } }
+                  style={ { paddingLeft: 20, paddingRight: 20, alignItems: 'center' } }>
+                  <Text style={ { fontSize: 40 } }>
                     >
                   </Text>
                 </TouchableOpacity>
@@ -194,8 +189,8 @@ class BrowsePage extends Component {
 
     var rows = events.map(function(event, i) {
       return (<Row
-        event={ event }
-        key={ i } />);
+                event={ event }
+                key={ i } />);
     });
 
     var overlays = events
@@ -215,78 +210,43 @@ class BrowsePage extends Component {
 
     return (
       <View style={ styles.container }>
-        <View style={ {
-        backgroundColor: '#DDD',
-        flexDirection: 'row',
-        padding: 10
-      }}>
-          <Text style={ {
-        flex: 1
-      }}>
+        <View style={ { backgroundColor: '#DDD', flexDirection: 'row', padding: 10 } }>
+          <Text style={ { flex: 1 } }>
             Start:
-            {' ' + moment(this.state.start).local().format('MMM DD hh:mm')}
+            { ' ' + moment(this.state.start).local().format('MMM DD hh:mm') }
           </Text>
-          <Text style={ {
-        flex: 1
-      }}>
+          <Text style={ { flex: 1 } }>
             End:
-            {' ' + moment(this.state.end).local().format('MMM DD hh:mm')}
+            { ' ' + moment(this.state.end).local().format('MMM DD hh:mm') }
           </Text>
         </View>
-        <View style={ {
-        flex: 1,
-        position: 'relative'
-      }}>
+        <View style={ { flex: 1, position: 'relative' } }>
           <MapView
-      ref="map"
-      style={ styles.map }
-      overlays={ overlays }
-      showsUserLocation={ true }
-      showsCompass={ true }
-      onRegionChangeComplete={ (region) => this._setRegion(region)}
-      region={ this.state.setRegion } />
+            ref="map"
+            style={ styles.map }
+            overlays={ overlays }
+            showsUserLocation={ true }
+            showsCompass={ true }
+            onRegionChangeComplete={ (region) => this._setRegion(region) }
+            region={ this.state.setRegion } />
           <TouchableHighlight
-      underlayColor="#DDD"
-      onPress={ () => this._onLocate()}
-      style={ {
-        position: 'absolute',
-        backgroundColor: 'white',
-        bottom: 10,
-        right: 10,
-        padding: 10,
-        borderColor: '#DDD',
-        borderWidth: 1
-      }}>
+            underlayColor="#DDD"
+            onPress={ () => this._onLocate() }
+            style={ { position: 'absolute', backgroundColor: 'white', bottom: 10, right: 10, padding: 10, borderColor: '#DDD', borderWidth: 1 } }>
             <Image
-      style={ {
-        width: 20,
-        height: 20
-      }}
-      source={ require('./locate.png')} />
+              style={ { width: 20, height: 20 } }
+              source={ require('./locate.png') } />
           </TouchableHighlight>
         </View>
-        <View style={ {
-        backgroundColor: '#FF5722',
-        padding: 5,
-        paddingTop: 10,
-        paddingBottom: 10,
-        flexDirection: 'row'
-      }}>
-          <Text style={ {
-        flex: 1,
-        color: 'white'
-      }}>
+        <View style={ { backgroundColor: '#FF5722', padding: 5, paddingTop: 10, paddingBottom: 10, flexDirection: 'row' } }>
+          <Text style={ { flex: 1, color: 'white' } }>
             { rows.length } results
           </Text>
           <ActivityIndicator
-      color="white"
-      style={ {
-        opacity: this.state.currentRequest ? 1 : 0
-      }} />
+            color="white"
+            style={ { opacity: this.state.currentRequest ? 1 : 0 } } />
         </View>
-        <ScrollView style={ {
-        flex: 1
-      }}>
+        <ScrollView style={ { flex: 1 } }>
           { rows }
         </ScrollView>
       </View>
@@ -317,14 +277,9 @@ class EventBrowser extends Component {
 
   render() {
     return (<Navigator
-      style={ {
-        flex: 1,
-        backgroundColor: 'white'
-      }}
-      initialRoute={ {
-        view: 'browse'
-      }}
-      renderScene={ this._renderScene.bind(this)} />);
+              style={ { flex: 1, backgroundColor: 'white' } }
+              initialRoute={ { view: 'browse' } }
+              renderScene={ this._renderScene.bind(this) } />);
   }
 }
 

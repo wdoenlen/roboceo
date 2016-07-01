@@ -1,5 +1,22 @@
 import React, { Component } from 'react';
-import { AppRegistry, Clipboard, Linking, Image, StyleSheet, Text, View, MapView, AlertIOS, AsyncStorage, ScrollView, Navigator, DatePickerIOS, ActivityIndicator, TouchableHighlight, TouchableOpacity, } from 'react-native';
+import {
+  AppRegistry,
+  Clipboard,
+  Linking,
+  Image,
+  StyleSheet,
+  Text,
+  View,
+  MapView,
+  AlertIOS,
+  AsyncStorage,
+  ScrollView,
+  Navigator,
+  DatePickerIOS,
+  ActivityIndicator,
+  TouchableHighlight,
+  TouchableOpacity,
+} from 'react-native';
 
 class PickOriginPage extends Component {
 
@@ -51,65 +68,37 @@ class PickOriginPage extends Component {
   render() {
     return (
       <View style={ styles.container }>
-        <View style={ {
-        flex: 1,
-        position: 'relative'
-      }}>
+        <View style={ { flex: 1, position: 'relative' } }>
           <MapView
-      ref="map"
-      style={ styles.map }
-      showsUserLocation={ true }
-      showsCompass={ true }
-      onRegionChangeComplete={ (region) => this.setState({
-        region: region
-      })}
-      region={ this.state.initialRegion } />
+            ref="map"
+            style={ styles.map }
+            showsUserLocation={ true }
+            showsCompass={ true }
+            onRegionChangeComplete={ (region) => this.setState({
+                                       region: region
+                                     }) }
+            region={ this.state.initialRegion } />
           <View
-      pointerEvents="none"
-      style={ {
-        backgroundColor: 'transparent',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0
-      }}>
-            <Text style={ {
-        fontSize: 30,
-        color: '#D0021B'
-      }}>
+            pointerEvents="none"
+            style={ { backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 } }>
+            <Text style={ { fontSize: 30, color: '#D0021B' } }>
               ✛
             </Text>
           </View>
           <TouchableHighlight
-      underlayColor="#DDD"
-      onPress={ () => this._onLocate()}
-      style={ {
-        position: 'absolute',
-        backgroundColor: 'white',
-        bottom: 10,
-        right: 10,
-        padding: 10,
-        borderColor: '#DDD',
-        borderWidth: 1
-      }}>
+            underlayColor="#DDD"
+            onPress={ () => this._onLocate() }
+            style={ { position: 'absolute', backgroundColor: 'white', bottom: 10, right: 10, padding: 10, borderColor: '#DDD', borderWidth: 1 } }>
             <Image
-      style={ {
-        width: 20,
-        height: 20
-      }}
-      source={ require('./locate.png')} />
+              style={ { width: 20, height: 20 } }
+              source={ require('./locate.png') } />
           </TouchableHighlight>
         </View>
         <TouchableHighlight
-      onPress={ () => this.props.onNext(this.state.region)}
-      underlayColor="#3EB399"
-      style={ styles.button }>
-          <Text style={ {
-        fontSize: 20
-      }}>
+          onPress={ () => this.props.onNext(this.state.region) }
+          underlayColor="#3EB399"
+          style={ styles.button }>
+          <Text style={ { fontSize: 20 } }>
             Set Origin
           </Text>
         </TouchableHighlight>
@@ -223,23 +212,12 @@ class PickTypesPage extends Component {
       }
 
       return (<TouchableHighlight
-        underlayColor="#990213"
-        onPress={ () => this._toggleType(type)}
-        key={ type }
-        style={[{
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 90,
-          height: 90,
-          padding: 10,
-          margin: 10
-        }, boxStyle]}>
-                <View style={ {
-          alignItems: 'center'
-        }}>
-                  <Text style={[{
-          fontWeight: '500'
-        }, textStyle]}>
+                underlayColor="#990213"
+                onPress={ () => this._toggleType(type) }
+                key={ type }
+                style={ [{ alignItems: 'center', justifyContent: 'center', width: 90, height: 90, padding: 10, margin: 10 }, boxStyle] }>
+                <View style={ { alignItems: 'center' } }>
+                  <Text style={ [{ fontWeight: '500' }, textStyle] }>
                     { type }
                   </Text>
                 </View>
@@ -248,24 +226,15 @@ class PickTypesPage extends Component {
 
     return (<View style={ styles.container }>
               <ScrollView
-      style={ {
-        flex: 1
-      }}
-      contentContainerStyle={ {
-        paddingTop: 20,
-        justifyContent: 'space-around',
-        flexDirection: 'row',
-        flexWrap: 'wrap'
-      }}>
+                style={ { flex: 1 } }
+                contentContainerStyle={ { paddingTop: 20, justifyContent: 'space-around', flexDirection: 'row', flexWrap: 'wrap' } }>
                 { items }
               </ScrollView>
               <TouchableHighlight
-      onPress={ () => this.props.onNext(this.selectedTypes())}
-      underlayColor="#3EB399"
-      style={ styles.button }>
-                <Text style={ {
-        fontSize: 20
-      }}>
+                onPress={ () => this.props.onNext(this.selectedTypes()) }
+                underlayColor="#3EB399"
+                style={ styles.button }>
+                <Text style={ { fontSize: 20 } }>
                   Set Categories
                 </Text>
               </TouchableHighlight>
@@ -275,16 +244,10 @@ class PickTypesPage extends Component {
 
 class LoadingPage extends Component {
   render() {
-    return (<View style={[styles.container, {
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#50E3C2'
-      }]}>
+    return (<View style={ [styles.container, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#50E3C2' }] }>
               <ActivityIndicator
-      size="large"
-      style={ {
-        margin: 20
-      }} />
+                size="large"
+                style={ { margin: 20 } } />
               <Text>
                 Loading...
               </Text>
@@ -350,79 +313,49 @@ class ViewPage extends Component {
       longitudeDelta: 0.005,
     };
 
-    return (<View style={[styles.container, {
-        paddingTop: 40
-      }]}>
-              <View style={ {
-        alignItems: 'center'
-      }}>
-      <TouchableOpacity
-      onPress={() => this.setState({
-        nameHidden: !this.state.nameHidden
-      })
-      } >
-                <Text
-      numberOfLines={1}
-      style={ {
-        fontWeight: 'bold',
-        fontSize: 20,
-        paddingLeft: 20,
-        paddingRight: 20,
-      }}>
-                  {this.state.nameHidden ? 'Your Destination' : dest.name}
-                </Text>
+    return (<View style={ [styles.container, { paddingTop: 40 }] }>
+              <View style={ { alignItems: 'center' } }>
+                <TouchableOpacity onPress={ () => this.setState({
+                                              nameHidden: !this.state.nameHidden
+                                            }) }>
+                  <Text
+                    numberOfLines={ 1 }
+                    style={ { fontWeight: 'bold', fontSize: 20, paddingLeft: 20, paddingRight: 20, } }>
+                    { this.state.nameHidden ? 'Your Destination' : dest.name }
+                  </Text>
                 </TouchableOpacity>
               </View>
-              <View style={ {
-        flexDirection: 'row',
-        padding: 10
-      }}>
+              <View style={ { flexDirection: 'row', padding: 10 } }>
                 <TouchableHighlight
-      underlayColor="#CCC"
-      onPress={ this.props.onCopy.bind(this)}
-      style={ {
-        alignItems: 'center',
-        padding: 10,
-        margin: 10,
-        flex: 1,
-        borderColor: '#EEE',
-        borderWidth: 1
-      }}>
+                  underlayColor="#CCC"
+                  onPress={ this.props.onCopy.bind(this) }
+                  style={ { alignItems: 'center', padding: 10, margin: 10, flex: 1, borderColor: '#EEE', borderWidth: 1 } }>
                   <Text>
                     Copy
                   </Text>
                 </TouchableHighlight>
                 <TouchableHighlight
-      underlayColor="#CCC"
-      onPress={ this.props.onMap.bind(this)}
-      style={ {
-        alignItems: 'center',
-        padding: 10,
-        margin: 10,
-        flex: 1,
-        borderColor: '#EEE',
-        borderWidth: 1
-      }}>
+                  underlayColor="#CCC"
+                  onPress={ this.props.onMap.bind(this) }
+                  style={ { alignItems: 'center', padding: 10, margin: 10, flex: 1, borderColor: '#EEE', borderWidth: 1 } }>
                   <Text>
                     Map
                   </Text>
                 </TouchableHighlight>
               </View>
               <MapView
-      ref="map"
-      style={ styles.map }
-      overlays={ overlays }
-      showsUserLocation={ true }
-      showsCompass={ true }
-      region={ region } />
+                ref="map"
+                style={ styles.map }
+                overlays={ overlays }
+                showsUserLocation={ true }
+                showsCompass={ true }
+                region={ region } />
               <View>
                 <TouchableHighlight
-      onPress={ this.props.onAnother.bind(this)}
-      underlayColor="#3EB399"
-      style={ styles.button }>
-                  <Text style={ {
-        fontSize: 20
-      }}>
+                  onPress={ this.props.onAnother.bind(this) }
+                  underlayColor="#3EB399"
+                  style={ styles.button }>
+                  <Text style={ { fontSize: 20 } }>
                     Try Again
                   </Text>
                 </TouchableHighlight>
@@ -445,45 +378,45 @@ class App extends Component {
     switch (route.view) {
       case 'pickorigin':
         return (<PickOriginPage onNext={ (origin) => {
-            this.setState({
-              origin: origin
-            });
-            navigator.push({
-              view: 'picktypes'
-            })
-          }} />);
+                           this.setState({
+                             origin: origin
+                           });
+                           navigator.push({
+                             view: 'picktypes'
+                           })
+                         } } />);
 
       case 'picktypes':
         return (<PickTypesPage onNext={ (selected) => {
-            this.setState({
-              types: selected
-            });
-            navigator.push({
-              view: 'loading'
-            });
-            getDestination(this.state.origin, selected).then((destination) => {
-              this.setState({
-                destination: destination
-              });
-              navigator.push({
-                view: 'view'
-              });
-            });
-          }} />);
+                          this.setState({
+                            types: selected
+                          });
+                          navigator.push({
+                            view: 'loading'
+                          });
+                          getDestination(this.state.origin, selected).then((destination) => {
+                            this.setState({
+                              destination: destination
+                            });
+                            navigator.push({
+                              view: 'view'
+                            });
+                          });
+                        } } />);
 
       case 'view':
         return (<ViewPage
-          onCopy={ () => {
-            Clipboard.setString(this.coordinates())
-            AlertIOS.alert('copied to clipboard');
-          }}
-          onMap={ () => {
-            Linking.openURL('comgooglemaps://?daddr=' + this.coordinates())
-              .catch(() => Linking.openURL('maps://?daddr=' + this.coordinates()))
-          }}
-          onAnother={ () => navigator.popToTop()}
-          origin={ this.state.origin }
-          destination={ this.state.destination } />);
+                  onCopy={ () => {
+                             Clipboard.setString(this.coordinates())
+                             AlertIOS.alert('copied to clipboard');
+                           } }
+                  onMap={ () => {
+                            Linking.openURL('comgooglemaps://?daddr=' + this.coordinates())
+                              .catch(() => Linking.openURL('maps://?daddr=' + this.coordinates()))
+                          } }
+                  onAnother={ () => navigator.popToTop() }
+                  origin={ this.state.origin }
+                  destination={ this.state.destination } />);
 
       case 'loading':
         return (<LoadingPage />);
@@ -495,13 +428,9 @@ class App extends Component {
 
   render() {
     return (<Navigator
-      style={ {
-        flex: 1
-      }}
-      initialRoute={ {
-        view: 'pickorigin'
-      }}
-      renderScene={ this._renderScene.bind(this)} />);
+              style={ { flex: 1 } }
+              initialRoute={ { view: 'pickorigin' } }
+              renderScene={ this._renderScene.bind(this) } />);
   }
 }
 
