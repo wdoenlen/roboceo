@@ -4,3 +4,8 @@ placepicker:
   ports:
     - 8001:5000
   restart: always
+jukebox:
+  build: services/jukebox
+  ports:
+    - 8002:8080
+  restart: always
