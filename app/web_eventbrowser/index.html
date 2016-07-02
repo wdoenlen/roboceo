@@ -240,7 +240,7 @@ function midnight(date) {
 }
 
 function updateEvents(startTime, endTime, bounds) {
-    var url = '/events'
+    var url = 'http://backend.machineexecutive.com:8000/events'
         + '?start=' + startTime.toJSON()
         + '&end=' + endTime.toJSON()
         + '&bb=' + bounds.join(',');
