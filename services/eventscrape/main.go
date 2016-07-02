@@ -64,10 +64,8 @@ func main() {
 	}
 
 	m := mux.NewRouter()
-	m.Handle("/", http.FileServer(http.Dir("www")))
 	m.HandleFunc("/scrape", api.HandleScrape)
 	m.HandleFunc("/events", api.HandleEvents)
-	m.HandleFunc("/mobile/events", api.HandleEventsMobile)
 
 	var handler http.Handler
 	handler = handlers.CompressHandlerLevel(m, gzip.BestCompression)

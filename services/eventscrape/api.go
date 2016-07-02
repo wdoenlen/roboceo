@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 type API struct {
@@ -96,49 +94,6 @@ func (a *API) getMessages(req GetEventsRequest) ([]EventMessage, error) {
 	}
 
 	return eventMsgs, nil
-}
-
-// slimmed down version
-func (a *API) HandleEventsMobile(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-		return
-	}
-
-	var req GetEventsRequest
-
-	start, _ := time.Parse(time.RFC3339, r.FormValue("start"))
-	req.Start = start
-
-	end, _ := time.Parse(time.RFC3339, r.FormValue("end"))
-	req.End = end
-
-	bb := strings.Split(r.FormValue("bb"), ",")
-	for _, coordStr := range bb {
-		coord, err := strconv.ParseFloat(coordStr, 64)
-		if err != nil {
-			continue
-		}
-		req.Bounds = append(req.Bounds, coord)
-	}
-
-	fmt.Println("eventReq", req)
-
-	eventMsgs, err := a.getMessages(req)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "[error]", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/x-msgpack")
-	buf, err := msgpack.Marshal(eventMsgs)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "[error]", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(buf)
 }
 
 func (a *API) HandleEvents(w http.ResponseWriter, r *http.Request) {
