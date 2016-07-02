@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"flag"
 	"fmt"
 	"log"
@@ -8,6 +9,9 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/facebook"
@@ -59,11 +63,17 @@ func main() {
 		db:      db,
 	}
 
-	http.Handle("/", http.FileServer(http.Dir("www")))
-	http.HandleFunc("/scrape", api.HandleScrape)
-	http.HandleFunc("/events", api.HandleEvents)
+	m := mux.NewRouter()
+	m.Handle("/", http.FileServer(http.Dir("www")))
+	m.HandleFunc("/scrape", api.HandleScrape)
+	m.HandleFunc("/events", api.HandleEvents)
+	m.HandleFunc("/mobile/events", api.HandleEventsMobile)
+
+	var handler http.Handler
+	handler = handlers.CompressHandlerLevel(m, gzip.BestCompression)
+	handler = handlers.LoggingHandler(os.Stderr, handler)
 
 	addr := fmt.Sprint(":", *port)
 	fmt.Fprintln(os.Stderr, "listening at", addr)
-	log.Fatal(http.ListenAndServe(addr, nil))
+	log.Fatal(http.ListenAndServe(addr, handler))
 }

@@ -15,7 +15,7 @@ type DB struct {
 }
 
 type GetEventsRequest struct {
-	Bounds []string
+	Bounds []float64
 	Start  time.Time
 	End    time.Time
 }
@@ -103,6 +103,7 @@ func (d *DB) GetEvents(req GetEventsRequest) ([][]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var events [][]byte
 

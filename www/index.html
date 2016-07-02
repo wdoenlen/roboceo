@@ -202,12 +202,12 @@ function render(data) {
         }
     }
 
-    setTimeout(function() {
-    	if (!nextEvent) {
-    		return;
-    	}
-        window.scroll(0, nextEvent.offsetTop - 50);
-    }, 0);
+    // setTimeout(function() {
+    // 	if (!nextEvent) {
+    // 		return;
+    // 	}
+    //     window.scroll(0, nextEvent.offsetTop - 50);
+    // }, 0);
 
 }
 
@@ -239,12 +239,11 @@ function midnight(date) {
     return d;
 }
 
-function updateEvents(startTime, endTime) {
+function updateEvents(startTime, endTime, bounds) {
     var url = '/events'
         + '?start=' + startTime.toJSON()
         + '&end=' + endTime.toJSON()
-        // + '&bb=24.7901,121.2827,25.2444,121.7301'
-        + '&bb=21.79119.83,25.53,122.24';
+        + '&bb=' + bounds.join(',');
 
     var xhr = new XMLHttpRequest();
     xhr.onload = function(e) {
@@ -274,7 +273,14 @@ function updateFromUI() {
     try {
         var start = new Date(Date.parse($start.value));
         var end = new Date(Date.parse($end.value));
-        updateEvents(start, end);
+        var bounds = [24.7901,121.2827,25.2444,121.7301];
+        if (Global.map) {
+            var b = Global.map.getBounds();
+            var sw = b.getSouthWest();
+            var ne = b.getNorthEast();
+            bounds = [sw.lat, sw.lng, ne.lat, ne.lng];
+        }
+        updateEvents(start, end, bounds);
     } catch(e) {
         alert(e.message);
     }
@@ -320,11 +326,19 @@ function updateMap() {
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.20.1/mapbox-gl.js'></script>
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoibWF4aGF3a2lucyIsImEiOiJlMzU3MGM3NjJhMDBiYWMwYWNiYzgyOTEzNjUwYWVmMiJ9.V9S2blLBpSk6TFpmPpxQgA';
-        var map = new mapboxgl.Map({
+        var map = Global.map = new mapboxgl.Map({
             container: 'map',
             center: [121.5654, 25.0330],
             zoom: 10,
             style: 'mapbox://styles/mapbox/streets-v9'
+        });
+
+        map.on('moveend', function() {
+            updateFromUI();
+        });
+
+        map.on('zoom', function() {
+            updateFromUI();
         });
 
         map.on('load', function() {
