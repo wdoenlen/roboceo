@@ -18,6 +18,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
+import geolib from 'geolib';
+
 class PickOriginPage extends Component {
 
   state = {
@@ -65,6 +67,15 @@ class PickOriginPage extends Component {
     });
   }
 
+  _onSubmit() {
+    var region = this.state.region;
+
+    var center = { latitude: region.latitude, longitude: region.longitude };
+    var radius_km = radiusFromRegion(region);
+
+    this.props.onNext(center, radius_km);
+  }
+
   render() {
     return (
       <View style={ styles.container }>
@@ -95,7 +106,7 @@ class PickOriginPage extends Component {
           </TouchableHighlight>
         </View>
         <TouchableHighlight
-          onPress={ () => this.props.onNext(this.state.region) }
+          onPress={ this._onSubmit.bind(this) }
           underlayColor="#3EB399"
           style={ styles.button }>
           <Text style={ { fontSize: 20 } }>
@@ -255,10 +266,11 @@ class LoadingPage extends Component {
   }
 }
 
-function getDestination(origin, types) {
-  var url = 'http://backend.machineexecutive.com:8001/'
+function getDestination(origin, types, radius_km) {
+  var url = 'http://backend.machineexecutive.com:8001/destination'
   + '?lat=' + origin.latitude
   + '&lng=' + origin.longitude
+  + '&radius_km=' + radius_km
   + '&types=' + types.join(',');
 
   return fetch(url)
@@ -276,6 +288,23 @@ function getDestination(origin, types) {
         longitude: data.lng,
       };
     });
+}
+
+function radiusFromRegion(region) {
+  var center = { latitude: region.latitude, longitude: region.longitude };
+  var yMax = {
+    latitude: region.latitude + region.latitudeDelta,
+    longitude: region.longitude,
+  };
+  var xMax = {
+    latitude: region.latitude,
+    longitude: region.longitude + region.longitudeDelta,
+  };
+
+  var yRadius = geolib.getDistance(center, yMax);
+  var xRadius = geolib.getDistance(center, xMax);
+
+  return Math.min(xRadius, yRadius) / 1000;
 }
 
 class ViewPage extends Component {
@@ -377,9 +406,10 @@ class App extends Component {
   _renderScene(route, navigator) {
     switch (route.view) {
       case 'pickorigin':
-        return (<PickOriginPage onNext={ (origin) => {
+        return (<PickOriginPage onNext={ (origin, radius) => {
                            this.setState({
-                             origin: origin
+                             origin: origin,
+                             radius: radius,
                            });
                            navigator.push({
                              view: 'picktypes'
@@ -388,20 +418,22 @@ class App extends Component {
 
       case 'picktypes':
         return (<PickTypesPage onNext={ (selected) => {
-                          this.setState({
-                            types: selected
-                          });
                           navigator.push({
                             view: 'loading'
                           });
-                          getDestination(this.state.origin, selected).then((destination) => {
-                            this.setState({
-                              destination: destination
+                          getDestination(this.state.origin, selected, this.state.radius)
+                            .then((destination) => {
+                              this.setState({
+                                destination: destination
+                              });
+                              navigator.push({
+                                view: 'view',
+                              })
+                            })
+                            .catch((err) => {
+                              alert(err.message);
+                              navigator.push({ view: 'pickorigin' });
                             });
-                            navigator.push({
-                              view: 'view'
-                            });
-                          });
                         } } />);
 
       case 'view':
