@@ -342,11 +342,27 @@ class ViewPage extends Component {
       longitudeDelta: 0.005,
     };
 
-    return (<View style={ [styles.container, { paddingTop: 40 }] }>
-              <View style={ { alignItems: 'center' } }>
-                <TouchableOpacity onPress={ () => this.setState({
-                                              nameHidden: !this.state.nameHidden
-                                            }) }>
+    return (<View style={ [styles.container, { paddingTop: 20 }] }>
+              <View style={ { paddingTop: 20, paddingBottom: 20, alignItems: 'center', backgroundColor: this.state.copied ? '#B8E6DC' : 'transparent' } }>
+                <TouchableOpacity
+                  onPressIn={ () => {
+                                if (this.state.nameHidden) {
+                                  return;
+                                }
+                                this.copyTimeout = setTimeout(() => {
+                                  Clipboard.setString(dest.name);
+                                  this.setState({ copied: true });
+                                }, 1000);
+                              } }
+                  onPressOut={ () => {
+                                 clearTimeout(this.copyTimeout);
+                                 this.copyTimeout = null;
+                                 if (this.state.copied) {
+                                   this.setState({ copied: false });
+                                 } else {
+                                   this.setState({ nameHidden: !this.state.nameHidden });
+                                 }
+                               } }>
                   <Text
                     numberOfLines={ 1 }
                     style={ { fontWeight: 'bold', fontSize: 20, paddingLeft: 20, paddingRight: 20, } }>
@@ -354,13 +370,13 @@ class ViewPage extends Component {
                   </Text>
                 </TouchableOpacity>
               </View>
-              <View style={ { flexDirection: 'row', padding: 10 } }>
+              <View style={ { flexDirection: 'row', padding: 10, paddingTop: 0 } }>
                 <TouchableHighlight
                   underlayColor="#CCC"
                   onPress={ this.props.onCopy.bind(this) }
                   style={ { alignItems: 'center', padding: 10, margin: 10, flex: 1, borderColor: '#EEE', borderWidth: 1 } }>
                   <Text>
-                    Copy
+                    Copy Coords
                   </Text>
                 </TouchableHighlight>
                 <TouchableHighlight
