@@ -125,13 +125,11 @@ class BrowsePage extends Component {
         throw new Error('bad response: ' + xhr.status);
       }
 
-      var events = JSON.parse(xhr.responseText);
+      var reply = JSON.parse(xhr.responseText);
 
-      events = events || [];
-
-      // AsyncStorage.setItem('lastEvents', JSON.stringify(events));
       that.setState({
-        events: events,
+        events: reply.events,
+        total_results: reply.total_results,
         currentRequest: null,
       });
     }
@@ -208,6 +206,13 @@ class BrowsePage extends Component {
         };
       });
 
+    var resultCountText;
+    if (this.state.total_results && (rows.length !== this.state.total_results)) {
+      resultCountText = `${rows.length} of ${this.state.total_results} results`;
+    } else {
+      resultCountText = `${rows.length} results`;
+    }
+
     return (
       <View style={ styles.container }>
         <View style={ { backgroundColor: '#DDD', flexDirection: 'row', padding: 10 } }>
@@ -240,7 +245,7 @@ class BrowsePage extends Component {
         </View>
         <View style={ { backgroundColor: '#FF5722', padding: 5, paddingTop: 10, paddingBottom: 10, flexDirection: 'row' } }>
           <Text style={ { flex: 1, color: 'white' } }>
-            { rows.length } results
+            { resultCountText }
           </Text>
           <ActivityIndicator
             color="white"

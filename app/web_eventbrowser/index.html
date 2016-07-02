@@ -248,7 +248,7 @@ function updateEvents(startTime, endTime, bounds) {
     var xhr = new XMLHttpRequest();
     xhr.onload = function(e) {
         var resp = JSON.parse(xhr.responseText);
-        Global.data = resp;
+        Global.data = resp.events;
         render(resp);
         updateMap();
     };
@@ -273,7 +273,7 @@ function updateFromUI() {
     try {
         var start = new Date(Date.parse($start.value));
         var end = new Date(Date.parse($end.value));
-        var bounds = [24.7901,121.2827,25.2444,121.7301];
+        var bounds = [34.913,138.8665,36.4478,141.0102];
         if (Global.map) {
             var b = Global.map.getBounds();
             var sw = b.getSouthWest();
@@ -328,7 +328,7 @@ function updateMap() {
         mapboxgl.accessToken = 'pk.eyJ1IjoibWF4aGF3a2lucyIsImEiOiJlMzU3MGM3NjJhMDBiYWMwYWNiYzgyOTEzNjUwYWVmMiJ9.V9S2blLBpSk6TFpmPpxQgA';
         var map = Global.map = new mapboxgl.Map({
             container: 'map',
-            center: [121.5654, 25.0330],
+            center: [139.6917, 35.6895],
             zoom: 10,
             style: 'mapbox://styles/mapbox/streets-v9'
         });
