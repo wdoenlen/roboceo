@@ -249,7 +249,7 @@ function updateEvents(startTime, endTime, bounds) {
     xhr.onload = function(e) {
         var resp = JSON.parse(xhr.responseText);
         Global.data = resp.events;
-        render(resp);
+        render(resp.events);
         updateMap();
     };
     xhr.onerror = function(e) {

@@ -32,8 +32,8 @@ class Row extends Component {
                 </View>
                 <View>
                   <Text>
-                    { moment(event.start_time).local().format('MMM DD hh:mm') } -
-                    { event.end_time ? moment(event.end_time).local().format('MMM DD hh:mm') : null }
+                    { moment(event.start_time).local().format('MMM DD HH:mm') } -
+                    { event.end_time ? moment(event.end_time).local().format('MMM DD HH:mm') : null }
                   </Text>
                 </View>
                 <View style={ { marginTop: 10 } }>
@@ -75,8 +75,7 @@ class BrowsePage extends Component {
       latitudeDelta: 1,
       longitudeDelta: 1.4,
     },
-    start: new Date(Date.now() - 1000 * 60 * 60 * 1),
-    end: new Date(Date.now() + 1000 * 60 * 60 * 5),
+    start: new Date(Date.now()),
   }
 
   async _loadInitialState() {
@@ -112,7 +111,7 @@ class BrowsePage extends Component {
 
     var url = 'http://backend.machineexecutive.com:8000/events'
       + '?start=' + this.state.start.toISOString()
-      + '&end=' + this.state.end.toISOString()
+      // + '&end=' + this.state.end.toISOString()
       + '&bb=' + bb;
 
     var xhr = new XMLHttpRequest();
@@ -182,7 +181,14 @@ class BrowsePage extends Component {
 
   render() {
     var events = this.state.events.sort(function(a, b) {
-      return moment(a.start_time).toDate() - moment(b.start_time).toDate();
+      var aDate = moment(a.start_time).toDate();
+      var bDate = moment(b.start_time).toDate()
+
+      if (aDate === bDate) {
+        return a.name.localeCompare(b.name)
+      } else {
+        return aDate - bDate;
+      }
     });
 
     var rows = events.map(function(event, i) {
@@ -191,18 +197,24 @@ class BrowsePage extends Component {
                 key={ i } />);
     });
 
+    // linear scale 0.05-2 1-10 or something like that
+    var width = this.state.region.longitudeDelta;
+    var b = 1 - (width - 0.05) / (1 - 0.05);
+    b = Math.min(1, Math.max(0, b));
+    var dotScale = b * (10 - 1) + 2;
+
     var overlays = events
       .filter(function(event) {
         return event.latitude && event.longitude;
       })
-      .map(function(event) {
+      .map((event) => {
         return {
           coordinates: [{
             latitude: event.latitude,
             longitude: event.longitude,
           }],
           strokeColor: '#f00',
-          lineWidth: 3,
+          lineWidth: dotScale,
         };
       });
 
@@ -215,16 +227,6 @@ class BrowsePage extends Component {
 
     return (
       <View style={ styles.container }>
-        <View style={ { backgroundColor: '#DDD', flexDirection: 'row', padding: 10 } }>
-          <Text style={ { flex: 1 } }>
-            Start:
-            { ' ' + moment(this.state.start).local().format('MMM DD hh:mm') }
-          </Text>
-          <Text style={ { flex: 1 } }>
-            End:
-            { ' ' + moment(this.state.end).local().format('MMM DD hh:mm') }
-          </Text>
-        </View>
         <View style={ { flex: 1, position: 'relative' } }>
           <MapView
             ref="map"
@@ -251,7 +253,7 @@ class BrowsePage extends Component {
             color="white"
             style={ { opacity: this.state.currentRequest ? 1 : 0 } } />
         </View>
-        <ScrollView style={ { flex: 1 } }>
+        <ScrollView>
           { rows }
         </ScrollView>
       </View>
