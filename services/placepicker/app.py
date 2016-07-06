@@ -17,6 +17,9 @@ app.config['COMPRESS_MIMETYPES'] = 'application/json; charset=utf-8'
 
 API_KEY = os.environ['PLACES_API_KEY']
 
+with open('tabelog_data.json', 'r') as f:
+	tabelog_data = json.load(f)
+
 def random_location(lat, lng, radius_km):
 	if radius_km <= 0:
 		return (lat, lng)
@@ -82,7 +85,11 @@ def try_pick_place(src_lat, src_lng, place_types, radius_km):
 	if len(valid_candidates) == 0:
 		return None
 
-	return random.choice(valid_candidates)
+	choice = random.choice(valid_candidates)
+	choice['lat'] = choice['geometry']['location']['lat']
+	choice['lng'] = choice['geometry']['location']['lng']
+
+	return choice
 
 def pick_place(src_lat, src_lng, place_types=[], radius_km=20):
 	tries = 5
@@ -100,6 +107,22 @@ def pick_place(src_lat, src_lng, place_types=[], radius_km=20):
 
 	return None
 
+def pick_tabelog(lat, lng, radius_km=20):
+	possible = []
+	for place in tabelog_data:
+		origin = LatLon(lat, lng)
+		dest = LatLon(place['lat'], place['lng'])
+
+		if origin.distance(dest) > radius_km:
+			continue
+
+		possible.append(place)
+
+	if len(possible) == 0:
+		return None
+
+	return random.choice(possible)
+
 @app.route("/destination")
 def choose_destination():
 	lat = float(request.args['lat'])
@@ -112,15 +135,19 @@ def choose_destination():
 	if len(types) == 0:
 		raise StandardError('at least one type required')
 
-	dest = pick_place(lat, lng, types, radius_km)
+	dest = None
+	# HACK(maxhawkins): hack in tabelog data
+	if types == ['restaurant']:
+		dest = pick_tabelog(lat, lng, radius_km)
+	if dest is None:
+		dest = pick_place(lat, lng, types, radius_km)
 	if dest is None:
 		return 'no results found', 500
 
-	location = dest['geometry']['location']
 	place = {
 		'name': dest['name'],
-		'lat': location['lat'],
-		'lng': location['lng'],
+		'lat': dest['lat'],
+		'lng': dest['lng'],
 	}
 
 	js = json.dumps(place, ensure_ascii=False)
@@ -130,4 +157,4 @@ def choose_destination():
 	return resp
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', debug=True)
