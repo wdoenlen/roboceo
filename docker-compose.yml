@@ -20,3 +20,8 @@ alarm:
   ports:
     - 8004:8080
   restart: always
+tsp:
+  build: services/tsp
+  ports:
+    - 8005:8000
+  restart: always
