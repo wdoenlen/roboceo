@@ -1,4 +1,6 @@
-var totalWorkoutTime = 60*60 / 2;
+"use strict";
+
+var totalWorkoutTime = 60 *60 / 2;
 var cumulativeWorkoutTime = 0;
 var minExerciseTime = 60;
 var maxExerciseTime = 0.33 * totalWorkoutTime;
@@ -12,59 +14,63 @@ function randomChoice(arr) {
   return elem;
 }
 
-function renderExercise(exercise, exerciseTime) {
-  var nextExercise = randomChoice(exercisesJSON);
-  var imgContainer = document.getElementById("img-container");
-  var spanCurrentExerciseName = document.getElementById("current-exercise");
-
-  imgContainer.innerHTML = "";
-  spanCurrentExerciseName.innerHTML = nextExercise.name +
-                                      " for " + exerciseTime + " seconds";
-
-  for (var i = 0; i < nextExercise.images.length; i++) {
-    var nextImg = document.createElement("img");
-    nextImg.src = nextExercise.images[i];
-    imgContainer.appendChild(nextImg);
-  }
-
-  console.log(exerciseTime);
-  console.log(nextExercise);
-
-}
-
 function sayExercise() {
   if (currentExercise) {
-    var utterance = new SpeechSynthesisUtterance(currentExercise.name);
+    var utterance = new SpeechSynthesisUtterance(currentExercise.exercise.name);
     window.speechSynthesis.speak(utterance);
   }
 }
 
-function sleep (time) {
-  return new Promise((resolve) => setTimeout(resolve, time));
+function randomExercise() {
+  var duration = Math.random() * (
+    totalWorkoutTime - cumulativeWorkoutTime
+  );
+  if (duration < minExerciseTime) {
+    duration = minExerciseTime;
+  }
+  else if (duration > maxExerciseTime) {
+    duration = maxExerciseTime;
+  }
+  return {
+    "exercise": randomChoice(exercisesJSON),
+    "duration": duration
+  }
 }
 
-function createExerciseRoutine() {
+function render(exercise) {
+  currentExercise = exercise; // Set currentExercise
+                              // for sayExercise in outer scope
 
-  var intervalId = setInterval(sayExercise, 3000);
+  var imgContainer = document.getElementById("img-container");
+  var spanCurrentExerciseName = document.getElementById("current-exercise");
 
-  while (cumulativeWorkoutTime < totalWorkoutTime) {
-    var exerciseTime = Math.random() * (
-      totalWorkoutTime - cumulativeWorkoutTime
-    );
-    if (exerciseTime < minExerciseTime) {
-      exerciseTime = minExerciseTime;
-    }
-    else if (exerciseTime > maxExerciseTime) {
-      exerciseTime = maxExerciseTime;
-    }
-    currentExercise = randomChoice(exercisesJSON);
-    renderExercise(currentExercise, exerciseTime);
+  imgContainer.innerHTML = "";
+  spanCurrentExerciseName.innerHTML = exercise.exercise.name +
+                                      " for " + exercise.duration + " seconds";
 
-    cumulativeWorkoutTime += exerciseTime;
-    console.log("Cum workout time is " + cumulativeWorkoutTime);
-
+  for (var i = 0; i < exercise.exercise.images.length; i++) {
+    var nextImg = document.createElement("img");
+    nextImg.src = exercise.exercise.images[i];
+    imgContainer.appendChild(nextImg);
   }
 
-  clearInterval(intervalId);
+}
 
+function displayNextExercise(context) {
+  var exercise = randomExercise();
+  render(exercise);
+  setTimeout(function() {
+    cumulativeWorkoutTime += exercise.duration;
+    if (cumulativeWorkoutTime > totalWorkoutTime) {
+      clearInterval(context.sayIntervalId);
+      return;
+    }
+    displayNextExercise()
+  }, exercise.duration * 1000);
+}
+
+function start() {
+  var intervalId = setInterval(sayExercise, 3000);
+  var context = {"sayIntervalId": intervalId}
+  displayNextExercise(context);
 }
