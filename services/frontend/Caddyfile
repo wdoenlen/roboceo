@@ -1,0 +1,32 @@
+backend.machineexecutive.com
+
+log stdout
+errors stderr
+
+gzip
+tls ceo@machineexecutive.com
+
+proxy /tsp tsp:8000 {
+	transparent
+	without /tsp
+}
+proxy /alarm alarm:8080 {
+	transparent
+	without /alarm
+}
+proxy /scheduler scheduler:5000 {
+	transparent
+	without /scheduler
+}
+proxy /placepicker placepicker:5000 {
+	transparent
+	without /placepicker
+}
+proxy /jukebox jukebox:8080 {
+	transparent
+	without /jukebox
+}
+proxy /eventbrowser eventbrowser:80 {
+	transparent
+	without /eventbrowser
+}

@@ -267,7 +267,7 @@ class LoadingPage extends Component {
 }
 
 function getDestination(origin, types, radius_km) {
-  var url = 'http://backend.machineexecutive.com:8001/destination'
+  var url = 'https://backend.machineexecutive.com/placepicker/destination'
   + '?lat=' + origin.latitude
   + '&lng=' + origin.longitude
   + '&radius_km=' + radius_km

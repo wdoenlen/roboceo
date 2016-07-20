@@ -12,7 +12,7 @@ class Alarm extends Component {
     registered: false,
   }
   async _onToken(token) {
-    var url = 'http://backend.machineexecutive.com:8004/register?token=' + token;
+    var url = 'https://backend.machineexecutive.com/alarm/register?token=' + token;
     var resp = await fetch(url);
     if (resp.status !== 200) {
       throw new Error('bad response ' + resp.status);

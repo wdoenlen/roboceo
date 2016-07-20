@@ -34,7 +34,7 @@ func (s *Sender) Close() {
 }
 
 func getTask(isWork bool) (string, error) {
-	u := "http://backend.machineexecutive.com:8003/task?context=anywhere&work="
+	u := "http://backend.machineexecutive.com/scheduler/task?context=anywhere&work="
 	if isWork {
 		u += "true"
 	} else {
@@ -54,6 +54,7 @@ func getTask(isWork bool) (string, error) {
 
 	return string(txt), nil
 }
+
 func (s *Sender) SendLoop() {
 	for {
 		duration := time.Duration(rand.Int63())%(75*time.Minute) + (15 * time.Minute)

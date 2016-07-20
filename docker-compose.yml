@@ -1,27 +1,38 @@
 placepicker:
   build: services/placepicker
   env_file: .env
-  ports:
-    - 8001:5000
   restart: always
 jukebox:
   build: services/jukebox
-  ports:
-    - 8002:8080
   restart: always
 scheduler:
   build: services/scheduler
   env_file: .env
-  ports:
-    - 8003:5000
   restart: always
 alarm:
   build: services/alarm
-  ports:
-    - 8004:8080
   restart: always
 tsp:
   build: services/tsp
+  restart: always
+selenium:
+  image: selenium/standalone-firefox
+  restart: always
+eventbrowser:
+  build: app/web_eventbrowser
+  restart: always
+frontend:
+  build: services/frontend
+  links:
+    - tsp:tsp
+    - alarm:alarm
+    - scheduler:scheduler
+    - jukebox:jukebox
+    - placepicker:placepicker
+    - eventbrowser:eventbrowser
+  volumes:
+    - .caddy:/.caddy
   ports:
-    - 8005:8000
+    - 80:80
+    - 443:443
   restart: always

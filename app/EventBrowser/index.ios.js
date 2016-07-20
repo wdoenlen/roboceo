@@ -109,7 +109,7 @@ class BrowsePage extends Component {
       region.longitude + region.longitudeDelta / 2,
     ].join(',');
 
-    var url = 'http://backend.machineexecutive.com:8000/events'
+    var url = 'https://backend.machineexecutive.com/eventdb/events'
       + '?start=' + this.state.start.toISOString()
       // + '&end=' + this.state.end.toISOString()
       + '&bb=' + bb;
