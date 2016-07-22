@@ -34,3 +34,11 @@ proxy /eventdb eventdb:8080 {
 	transparent
 	without /eventdb
 }
+proxy /fbcallback eventscrape:3545 {
+	transparent
+	without /fbcallback
+}
+proxy /eventscrape eventscrape:8080 {
+	transparent
+	without /eventscrape
+}

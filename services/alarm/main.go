@@ -70,6 +70,7 @@ func (s *Sender) SendLoop() {
 
 		task, err := getTask(isWork)
 		if err != nil {
+			time.Sleep(5 * time.Second)
 			log.Println("Error:", err)
 			continue
 		}

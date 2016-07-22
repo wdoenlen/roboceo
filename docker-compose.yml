@@ -15,9 +15,6 @@ alarm:
 tsp:
   build: services/tsp
   restart: always
-selenium:
-  image: selenium/standalone-firefox
-  restart: always
 eventbrowser:
   build: app/web_eventbrowser
   restart: always
@@ -27,6 +24,16 @@ eventdb:
   links:
     - postgres
   restart: always
+selenium:
+  image: selenium/standalone-firefox
+  restart: always
+  command: bash -c "rm /tmp/.X99-lock || echo 'Lock not found, continuing normal startup' && export no_proxy=*.local && /opt/bin/entry_point.sh"
+eventscrape:
+  build: services/eventscrape
+  command: eventscrape -server ":8080" -oauth_callback https://backend.machineexecutive.com/fbcallback -webdriver_addr selenium:4444 http://eventdb:8080/events
+  links:
+    - selenium
+    - eventdb
 postgres:
   image: postgres:9.6
   restart: always
@@ -37,13 +44,14 @@ postgres:
 frontend:
   build: services/frontend
   links:
-    - tsp
     - alarm
-    - scheduler
-    - jukebox
-    - placepicker
     - eventbrowser
     - eventdb
+    - eventscrape
+    - jukebox
+    - placepicker
+    - scheduler
+    - tsp
   volumes:
     - .caddy:/.caddy
   ports:
