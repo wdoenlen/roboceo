@@ -6,14 +6,9 @@ import time
 import requests
 
 from flask import Flask, request, Response
-from flask.ext.compress import Compress
 from LatLon import LatLon
 
 app = Flask(__name__)
-
-# HACK(maxhawkins): put nginx in front of this app instead
-Compress(app)
-app.config['COMPRESS_MIMETYPES'] = 'application/json; charset=utf-8'
 
 API_KEY = os.environ['PLACES_API_KEY']
 
@@ -137,8 +132,8 @@ def choose_destination():
 
 	dest = None
 	# HACK(maxhawkins): hack in tabelog data
-	if types == ['restaurant']:
-		dest = pick_tabelog(lat, lng, radius_km)
+	# if types == ['restaurant']:
+	# 	dest = pick_tabelog(lat, lng, radius_km)
 	if dest is None:
 		dest = pick_place(lat, lng, types, radius_km)
 	if dest is None:
@@ -157,4 +152,4 @@ def choose_destination():
 	return resp
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0')
