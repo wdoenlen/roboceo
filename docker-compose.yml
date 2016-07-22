@@ -21,15 +21,29 @@ selenium:
 eventbrowser:
   build: app/web_eventbrowser
   restart: always
+eventdb:
+  build: services/eventdb
+  command: eventdb -db "postgres://postgres:postgres@postgres/postgres?sslmode=disable"
+  links:
+    - postgres
+  restart: always
+postgres:
+  image: postgres:9.6
+  restart: always
+  environment:
+    - POSTGRES_PASSWORD=postgres
+  volumes:
+    - /var/lib/postgresql/data:/var/lib/postgresql/data
 frontend:
   build: services/frontend
   links:
-    - tsp:tsp
-    - alarm:alarm
-    - scheduler:scheduler
-    - jukebox:jukebox
-    - placepicker:placepicker
-    - eventbrowser:eventbrowser
+    - tsp
+    - alarm
+    - scheduler
+    - jukebox
+    - placepicker
+    - eventbrowser
+    - eventdb
   volumes:
     - .caddy:/.caddy
   ports:

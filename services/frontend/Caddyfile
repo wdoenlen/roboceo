@@ -30,3 +30,7 @@ proxy /eventbrowser eventbrowser:80 {
 	transparent
 	without /eventbrowser
 }
+proxy /eventdb eventdb:8080 {
+	transparent
+	without /eventdb
+}
