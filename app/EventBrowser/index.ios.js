@@ -109,9 +109,11 @@ class BrowsePage extends Component {
       region.longitude + region.longitudeDelta / 2,
     ].join(',');
 
+    var start = this.state.start;
+    var end = new Date(start.getTime() + 1000 * 60 * 60);
     var url = 'https://backend.machineexecutive.com/eventdb/events'
-      + '?start=' + this.state.start.toISOString()
-      // + '&end=' + this.state.end.toISOString()
+      + '?start=' + start.toISOString()
+      + '&end=' + end.toISOString()
       + '&bb=' + bb;
 
     var xhr = new XMLHttpRequest();
@@ -121,7 +123,10 @@ class BrowsePage extends Component {
     var that = this;
     xhr.onload = function(e) {
       if (xhr.status != 200) {
-        throw new Error('bad response: ' + xhr.status);
+        var err = new Error('bad response: ' + xhr.status);
+        alert(err);
+        console.error(err); // TODO(maxhawkins) add error handling
+        return;
       }
 
       var reply = JSON.parse(xhr.responseText);
@@ -148,7 +153,11 @@ class BrowsePage extends Component {
 
   componentWillUpdate(nextProps, nextState) {
     if (this.state.region !== nextState.region) {
-      this._fetchEvents(nextState.region);
+      try {
+        this._fetchEvents(nextState.region);
+      } catch ( e ) {
+        console.error(e);
+      }
       AsyncStorage.setItem('region', JSON.stringify(nextState.region));
     }
   }
