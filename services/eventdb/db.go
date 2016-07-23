@@ -71,7 +71,8 @@ func (d *DB) SaveEvents(events []Event) error {
 func (d *DB) GetEvents(req GetEventsRequest) ([]Event, error) {
 	var args []interface{}
 	query := `SELECT id, name, description, start_time, end_time, latitude, longitude
-		FROM events WHERE tstzrange($1, $2) && tstzrange(start_time, end_time)`
+		FROM events
+		WHERE tstzrange($1, $2) && tstzrange(start_time, COALESCE(end_time, start_time))`
 
 	args = append(args,
 		pq.NullTime{Time: req.Start.UTC(), Valid: !req.Start.IsZero()},

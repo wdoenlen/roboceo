@@ -15,7 +15,7 @@ import (
 
 func main() {
 	var (
-		dbPath = flag.String("db", "postgres://localhost/eventdb", "sqlite db location")
+		dbPath = flag.String("db", "postgres://localhost/eventdb?sslmode=disable", "sqlite db location")
 		port   = flag.Int("port", 8080, "http port")
 		// yandexKey = flag.String("yandex_key", "trnsl.1.1.20160630T124034Z.39e1ba8746eb8752.86b1c259847b43cce1f510b3bce30942745aeab5", "")
 	)
