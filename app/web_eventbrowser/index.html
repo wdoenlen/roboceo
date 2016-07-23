@@ -239,7 +239,16 @@ function midnight(date) {
     return d;
 }
 
+// The currently-executing API request. Extracted here so it
+// can be cancelled while dragging the map.
+var CurrentRequest = null;
+
 function updateEvents(startTime, endTime, bounds) {
+    if (CurrentRequest) {
+        CurrentRequest.abort();
+        CurrentRequest = null;
+    }
+
     var url = 'https://backend.machineexecutive.com/eventdb/events'
         + '?start=' + startTime.toJSON()
         + '&end=' + endTime.toJSON()
@@ -256,6 +265,7 @@ function updateEvents(startTime, endTime, bounds) {
         $loading.innerText = 'Load error';
     }
     xhr.open('GET', url, true);
+    CurrentRequest = xhr;
     xhr.send(null);
 
     $results.innerHTML = '';
