@@ -16,6 +16,7 @@ class RouteHandler(tornado.web.RequestHandler):
             self.clear()
             self.set_status(400)
             self.finish('nodes must have at least two')
+            return
 
         win_start = req['startTime']
         win_end = req['endTime']
@@ -26,6 +27,7 @@ class RouteHandler(tornado.web.RequestHandler):
             self.clear()
             self.set_status(400)
             self.finish('start must have lat and lng')
+            return
         nodes = [start] + nodes
 
         # HACK(maxhawkins): ORTools requires the depot to
@@ -39,6 +41,7 @@ class RouteHandler(tornado.web.RequestHandler):
                 self.clear()
                 self.set_status(400)
                 self.finish('each node must have lat and lng')
+                return
 
             # HACK(maxhawkins): eventually we should support nodes
             # that don't have open/close times using single-sided
