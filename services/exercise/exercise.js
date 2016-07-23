@@ -1,6 +1,6 @@
 "use strict";
 
-var totalWorkoutTime = 60 *60 / 2;
+var totalWorkoutTime = 60 * 60 / 2;
 var cumulativeWorkoutTime = 0;
 var minExerciseTime = 60;
 var maxExerciseTime = 0.33 * totalWorkoutTime;
@@ -23,12 +23,11 @@ function sayExercise() {
 
 function randomExercise() {
   var duration = Math.random() * (
-    totalWorkoutTime - cumulativeWorkoutTime
+  totalWorkoutTime - cumulativeWorkoutTime
   );
   if (duration < minExerciseTime) {
     duration = minExerciseTime;
-  }
-  else if (duration > maxExerciseTime) {
+  } else if (duration > maxExerciseTime) {
     duration = maxExerciseTime;
   }
   return {
@@ -38,15 +37,14 @@ function randomExercise() {
 }
 
 function render(exercise) {
-  currentExercise = exercise; // Set currentExercise
-                              // for sayExercise in outer scope
+  currentExercise = exercise; // Set currentExercise for sayExercise in outer scope
 
   var imgContainer = document.getElementById("img-container");
   var spanCurrentExerciseName = document.getElementById("current-exercise");
 
   imgContainer.innerHTML = "";
   spanCurrentExerciseName.innerHTML = exercise.exercise.name +
-                                      " for " + exercise.duration + " seconds";
+    " for " + exercise.duration + " seconds";
 
   for (var i = 0; i < exercise.exercise.images.length; i++) {
     var nextImg = document.createElement("img");
@@ -71,6 +69,8 @@ function displayNextExercise(context) {
 
 function start() {
   var intervalId = setInterval(sayExercise, 3000);
-  var context = {"sayIntervalId": intervalId}
+  var context = {
+    "sayIntervalId": intervalId,
+  };
   displayNextExercise(context);
 }
