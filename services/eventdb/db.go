@@ -32,8 +32,6 @@ func (d *DB) SaveEvents(events []Event) error {
 	defer tx.Rollback()
 
 	for _, event := range events {
-		tx.Exec(`DELETE FROM events WHERE id=$1`, event.ID)
-
 		startTime := event.StartTime.UTC()
 		endTime := event.EndTime.UTC()
 		if endTime.IsZero() {
@@ -48,7 +46,9 @@ func (d *DB) SaveEvents(events []Event) error {
 			INSERT INTO events
 			(id, name, description, start_time, end_time, latitude, longitude)
 			VALUES
-			($1, $2, $3, $4, $5, $6, $7)`,
+			($1, $2, $3, $4, $5, $6, $7)
+			ON CONFLICT (id) DO UPDATE
+			SET name=$2, description=$3, start_time=$4, end_time=$5, latitude=$6, longitude=$7`,
 			event.ID,
 			event.Name,
 			event.Description,
@@ -70,8 +70,10 @@ func (d *DB) SaveEvents(events []Event) error {
 
 func (d *DB) GetEvents(req GetEventsRequest) ([]Event, error) {
 	var args []interface{}
-	query := `SELECT id, name, description, start_time, end_time, latitude, longitude
-		FROM events WHERE tstzrange($1, $2) && tstzrange(start_time, end_time)`
+	query := `SELECT
+		id, name, description, start_time, end_time, latitude, longitude
+		FROM events
+		WHERE tstzrange($1, $2) && tstzrange(start_time, COALESCE(end_time, start_time))`
 
 	args = append(args,
 		pq.NullTime{Time: req.Start.UTC(), Valid: !req.Start.IsZero()},
