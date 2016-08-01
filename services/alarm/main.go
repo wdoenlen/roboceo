@@ -4,19 +4,15 @@ import (
 	"encoding/gob"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sideshow/apns2"
 	"github.com/sideshow/apns2/certificate"
-	"github.com/sideshow/apns2/payload"
 )
 
 var client *apns2.Client
@@ -24,84 +20,7 @@ var client *apns2.Client
 var sendersMu sync.Mutex
 var senders = make(map[string]*Sender)
 
-type Sender struct {
-	Token string
-	stop  chan struct{}
-}
-
-func (s *Sender) Close() {
-	s.stop <- struct{}{}
-}
-
-func getTask(isWork bool) (string, error) {
-	u := "http://backend.machineexecutive.com/scheduler/task?context=anywhere&work="
-	if isWork {
-		u += "true"
-	} else {
-		u += "false"
-	}
-
-	resp, err := http.Get(u)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	txt, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	return string(txt), nil
-}
-
-func (s *Sender) SendLoop() {
-	for {
-		duration := time.Duration(rand.Int63())%(75*time.Minute) + (15 * time.Minute)
-		duration = duration - (duration % time.Minute) // round
-		isWork := rand.Float64() > 0.5
-
-		endTime := time.Now().Add(duration)
-		zone, err := time.LoadLocation("Asia/Tokyo")
-		if err != nil {
-			log.Fatal(err)
-		}
-		endTimeStr := endTime.In(zone).Format("15:04")
-
-		task, err := getTask(isWork)
-		if err != nil {
-			time.Sleep(5 * time.Second)
-			log.Println("Error:", err)
-			continue
-		}
-
-		alertMsg := fmt.Sprintf("%s until %s", task, endTimeStr)
-
-		fmt.Println("send pushes...", s.Token)
-
-		pload := payload.NewPayload().
-			Alert(alertMsg).
-			Sound("voicemail.caf")
-
-		notification := &apns2.Notification{
-			DeviceToken: s.Token,
-			Topic:       "com.executivemachine.Alarm",
-			Payload:     pload,
-		}
-
-		resp, err := client.Push(notification)
-		if err != nil {
-			log.Println("Error:", err)
-			continue
-		}
-		if resp.StatusCode != http.StatusOK {
-			log.Println("Error:", resp.Reason)
-			continue
-		}
-
-		time.Sleep(duration)
-	}
-}
+var currentSchedule string
 
 func init() {
 	sendersMu.Lock()
@@ -136,6 +55,57 @@ func SaveSender(token string, sender *Sender) {
 	if err := gob.NewEncoder(f).Encode(senders); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func HandleSetSchedule(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	schedule := r.FormValue("schedule")
+
+	currentSchedule = schedule
+
+	tasks, err := ParseSchedule(schedule)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	now := Now()
+	var futureTasks []Task
+	for _, task := range tasks {
+		if task.Time < now {
+			continue
+		}
+		futureTasks = append(futureTasks, task)
+	}
+
+	sendersMu.Lock()
+	for _, sender := range senders {
+		sender.Todo = futureTasks
+	}
+	sendersMu.Unlock()
+
+	fmt.Fprintf(w, "loaded %d tasks\n", len(futureTasks))
+}
+
+func HandleIndex(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `<html>
+		<head>
+			<title></title>
+			<meta charset="utf-8">
+		</head>
+		<body>
+			<form action="" method="POST">
+				<textarea rows=15 cols=50 name="schedule">%s</textarea>
+				<br>
+				<br>
+				<input type="submit" value="update schedule">
+			</form>
+		</body>
+	</html>`, currentSchedule)
 }
 
 func HandleRegister(w http.ResponseWriter, r *http.Request) {
@@ -176,6 +146,8 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/register", HandleRegister)
+	r.HandleFunc("/schedule", HandleIndex).Methods("GET")
+	r.HandleFunc("/schedule", HandleSetSchedule).Methods("POST")
 
 	var handler http.Handler
 	handler = r
