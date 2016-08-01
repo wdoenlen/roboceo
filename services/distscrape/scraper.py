@@ -1,3 +1,9 @@
+import datetime
+import json
+import time
+import random
+
+SCRAPE_JS = '''
 // This file contains the JavaScript source for a Google Maps distance
 // data scraper. As of July 23, 2016 it works with the running version
 // of Google Maps.
@@ -16,27 +22,8 @@
 // To run, execute the BuildURL function below and navigate to the generated URL.
 // Then copy-paste the rest of the source into the console and call StartScrape().
 
-// BuildURL outputs a Google maps URL for a map centered on the given point.
-// After navigating to this page you can use StartScrape() to extract distances
-// from the given point to other places near it.
-function BuildURL(lat0, lng0) {
-  var latCenter = lat0;
-  var lngCenter = lng0;
-  var zoom = 10;
-  var start = new Date(2016, 7, 21, 12, 0, 0, 0);
-  var startMillisUTC = start.getTime() - start.getTimezoneOffset() * 60 * 1000;
-  var startSecs = Math.floor(startMillisUTC / 1000);
-
-  var path = '/' + [
-    "maps",
-    "dir",
-    "/'" + lat0 + "," + lng0 + "'",
-    "@" + latCenter + "," + lngCenter + "," + zoom + "z",
-    "data=!3m1!4b1!4m11!4m10!1m0!1m3!2m2!1d" + lat0 + "!2d" + lng0 + "!2m3!6e0!7e2!8j" + startSecs + "!3e3",
-  ].join('/');
-
-  return "https://www.google.com" + path
-}
+window.TODO = [];
+window.RESULTS = [];
 
 // when set to false in the console, this stops
 // the loop function and halts the scrape.
@@ -44,22 +31,31 @@ var stop = false;
 
 // StartScrape kicks things off! Only call this after you're on the page
 // returned by BuildURL.
-function StartScrape() {
+window.StartScrape = function() {
   var page = new DirectionsPage();
-  page.doInitialClick()
+  page.reverseDirections()
+    .then(function() {
+      return page.doInitialClick();
+    })
     .then(function() {
 
       function loop() {
         // For now, just choose random offsets in screen space. Later
         // we might be interested in specific lat-lngs.
-        var point = {
-          top: Math.random(),
-          left: Math.random()
-        };
+        var point = window.TODO.pop();
+        if (!point) {
+          sleep(500).then(loop);
+        }
 
         page.sampleMap(point)
           .then(function(result) {
             console.log('result = ', result); // it worked!
+
+            RESULTS.push({
+              point: point,
+              info: result,
+            });
+
             if (!stop) {
               loop();
             }
@@ -72,6 +68,12 @@ function StartScrape() {
             // something to do with mousemove-ing to points that are nearby the previous
             // point we moved to.
             console.warn('trip info never appeared. this is a bug. point = ', point);
+
+            RESULTS.push({
+              point: point,
+              error: 'trip info never appeared',
+            });
+
             if (!stop) {
               loop();
             }
@@ -178,12 +180,12 @@ DirectionsPage.prototype.untilTripInfoChange = function() {
 // sendMouseEvent sends a fake mouse event of a given type to the
 // canvas element. It takes a Point object specifying where to click
 // (see Coord).
-DirectionsPage.prototype.sendMouseEvent = function(type, point) {
+DirectionsPage.prototype.sendMouseEvent = function(type, point, target) {
   var pixel = this.coords.toWindowPixel(point);
   var x = pixel.x;
   var y = pixel.y;
 
-  var canvas = this.root.querySelector('canvas.widget-scene-canvas');
+  var canvas = target || this.root.querySelector('canvas.widget-scene-canvas');
   var evt = new MouseEvent(type, {
     view: window,
     bubbles: true,
@@ -231,6 +233,17 @@ function sleep(timeout) {
   return new Promise(function(resolve) {
     setTimeout(resolve, timeout);
   });
+}
+
+DirectionsPage.prototype.reverseDirections = function() {
+  var button = document.querySelector('.widget-directions-reverse');
+
+  this.sendMouseEvent('click', {
+    top: 0,
+    left: 0
+  }, button);
+
+  return sleep(500);
 }
 
 // doInitialClick puts the directions page into 'distance on drag'
@@ -349,3 +362,88 @@ Coords.prototype.toRect = function(point) {
     throw new Error('unknown coordinate type');
   }
 };
+'''
+
+class Scraper(object):
+  def __init__(self, browser, lat, lng):
+    self.browser = browser
+    self._setup(lat, lng)
+
+  def get_remaining(self):
+    '''
+    Returns the number of points in the queue that remain to
+    be sampled. When this reaches zero we're done.
+    '''
+    return self.browser.execute_async_script('''
+      var callback = arguments[arguments.length - 1];
+      var remaining = window.TODO.length;
+      callback(remaining);
+    ''')
+
+  def get_results(self):
+    '''
+    Remove all of the scrape results waiting in the browser's
+    completed queue and return them. Returns a generator.
+    '''
+    results = self.browser.execute_async_script('''
+      var callback = arguments[arguments.length - 1];
+      var results = window.RESULTS;
+      window.RESULTS = [];
+      callback(results);
+    ''')
+    for res in results:
+      try:
+        left = res['point']['left']
+        top = res['point']['top']
+        duration = int(res['info']['title'].replace(' min', ''))
+        yield "%f %f %f" % (left, top, duration)
+      except:
+        pass
+
+  def _setup(self, lat, lng):
+      # TODO(maxhawkins): at some point we might want to sample
+      # the map more intelligently (more density at transition
+      # points for instance). For now, just build a 32x32 grid.
+      todo = []
+      for x in range(0, 32):
+        for y in range(0, 32):
+          todo.append({
+            'left': float(x) / 32,
+            'top': float(y) / 32
+          })
+
+      # HACK(maxhawkins): shuffling the list avoids a problem
+      # where the map doesn't update if you sample two places
+      # in a row that are very close to each other. This should
+      # be fixed in the JS scraper code and this shuffle should
+      # be removed.
+      random.shuffle(todo)
+
+      url = build_url(lat, lng)
+      self.browser.get(url)
+
+      self.browser.execute_script(SCRAPE_JS)
+      self.browser.execute_script('StartScrape()')
+
+      self.browser.execute_script(
+        '%s.forEach(function(t) {window.TODO.push(t) })' % json.dumps(todo))
+
+# build_url outputs a Google maps URL for a map centered on the given point.
+# After navigating to this page you can use StartScrape() to extract distances
+# from the given point to other places near it.
+def build_url(lat_src, lng_src):
+	lat_center = lat_src
+	lng_center = lng_src
+	zoom = 9
+
+	epoch = datetime.datetime.utcfromtimestamp(0)
+	start_utc = int((datetime.datetime.now() - epoch).total_seconds())
+
+	return ''.join([
+		"https://www.google.com",
+		"/maps",
+		"/dir",
+		"//'%f,%f'" % (lat_src, lng_src),
+		"/@%f,%f,%dz" % (lat_center, lng_center, zoom),
+		"/data=!3m1!4b1!4m11!4m10!1m0!1m3!2m2!1d%f!2d%f!2m3!6e0!7e2!8j%d!3e3" % (lat_src, lng_src, start_utc),
+	])

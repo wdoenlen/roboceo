@@ -42,3 +42,7 @@ proxy /eventscrape eventscrape:8080 {
 	transparent
 	without /eventscrape
 }
+proxy /distscrape distscrape:9999 {
+	transparent
+	without /distscrape
+}
