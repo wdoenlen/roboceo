@@ -41,6 +41,11 @@ postgres:
     - POSTGRES_PASSWORD=postgres
   volumes:
     - /var/lib/postgresql/data:/var/lib/postgresql/data
+cron:
+  build: services/cron
+  restart: always
+  links:
+    - eventscrape
 frontend:
   build: services/frontend
   links:
