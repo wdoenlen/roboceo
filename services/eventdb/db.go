@@ -34,7 +34,7 @@ func (d *DB) SaveEvents(events []Event) error {
 	for _, event := range events {
 		startTime := event.StartTime.UTC()
 		endTime := event.EndTime.UTC()
-		if endTime.IsZero() {
+		if endTime.Sub(startTime) < 0 {
 			endTime = startTime
 		}
 

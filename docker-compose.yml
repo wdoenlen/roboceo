@@ -34,6 +34,11 @@ eventscrape:
   links:
     - selenium
     - eventdb
+distscrape:
+  build: services/distscrape
+  restart: always
+  links:
+    - selenium
 postgres:
   image: postgres:9.6
   restart: always
@@ -52,6 +57,7 @@ frontend:
     - placepicker
     - scheduler
     - tsp
+    - distscrape
   volumes:
     - .caddy:/.caddy
   ports:
