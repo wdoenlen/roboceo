@@ -2,6 +2,7 @@ import collections
 import contextlib
 import sys
 import wave
+import json
 
 import webrtcvad
 
@@ -34,12 +35,9 @@ def frame_generator(frame_duration_ms, audio, sample_rate):
         offset += n
 
 
-def vad_collector(sample_rate, frame_duration_ms,
-                  padding_duration_ms, vad, frames):
-    num_padding_frames = int(padding_duration_ms / frame_duration_ms)
+def vad_collector(sample_rate, num_padding_frames, vad, frames):
     ring_buffer = collections.deque(maxlen=num_padding_frames)
     triggered = False
-    voiced_frames = []
     start_frame = -1
     for i, frame in enumerate(frames):
         if not triggered:
@@ -48,30 +46,19 @@ def vad_collector(sample_rate, frame_duration_ms,
                               if vad.is_speech(f, sample_rate)])
             if num_voiced > 0.9 * ring_buffer.maxlen:
                 triggered = True
-                print "on @ %d" % i
-                start_frame = i
-                voiced_frames.extend(ring_buffer)
+                start_frame = i - num_padding_frames
                 ring_buffer.clear()
         else:
-            voiced_frames.append(frame)
             ring_buffer.append(frame)
             num_unvoiced = len([f for f in ring_buffer
                                 if not vad.is_speech(f, sample_rate)])
             if num_unvoiced > 0.9 * ring_buffer.maxlen:
                 triggered = False
-                end_frame = i
-                print "off @ %d" % i
-                yield [
-                    float(start_frame) * frame_duration_ms - padding_duration_ms,
-                    float(end_frame) * frame_duration_ms
-                ]
+                end_frame = i - num_padding_frames
+                yield [start_frame, end_frame]
                 ring_buffer.clear()
-                voiced_frames = []
-    if voiced_frames:
-        yield [
-            float(start_frame) * frame_duration_ms - padding_duration_ms,
-            float(len(frames)) * frame_duration_ms
-        ]
+    if triggered:
+        yield [start_frame, len(frames)]
 
 
 def main(args):
@@ -81,24 +68,21 @@ def main(args):
         sys.exit(1)
     audio, sample_rate = read_wave(args[1])
     vad = webrtcvad.Vad(int(args[0]))
-    frames = frame_generator(30, audio, sample_rate)
+
+    frame_duration_ms = 30
+    frames = frame_generator(frame_duration_ms, audio, sample_rate)
     frames = list(frames)
 
     results = []
-    for result in vad_collector(sample_rate, 30, 100, vad, frames):
-        results.append(result)
+    for result in vad_collector(sample_rate, 3, vad, frames):
+        start_ms = result[0] * frame_duration_ms
+        end_ms = result[1] * frame_duration_ms
+        results.append({
+            "start": float(start_ms) / 1000.0,
+            "duration": float(end_ms - start_ms) / 1000.0,
+        })
 
-    print '['
-    for i, result in enumerate(results):
-        start = result[0] / 1000
-        end = result[1] / 1000
-        line = '\t'
-        line += '{"start": %f, "duration": %f, "event": "voice"}' % (start, end - start)
-        if i < (len(results) - 1):
-            line += ','
-        print line
-
-    print ']'
+    print json.dumps(results, indent=2)
 
 
 if __name__ == '__main__':
