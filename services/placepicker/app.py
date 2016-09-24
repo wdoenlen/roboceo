@@ -12,8 +12,8 @@ app = Flask(__name__)
 
 API_KEY = os.environ['PLACES_API_KEY']
 
-with open('tabelog_data.json', 'r') as f:
-	tabelog_data = json.load(f)
+# with open('tabelog_data.json', 'r') as f:
+# 	tabelog_data = json.load(f)
 
 def random_location(lat, lng, radius_km):
 	if radius_km <= 0:
