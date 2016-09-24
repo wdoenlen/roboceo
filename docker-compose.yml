@@ -1,71 +1,57 @@
-placepicker:
-  build: services/placepicker
-  env_file: .env
-  restart: always
-jukebox:
-  build: services/jukebox
-  restart: always
-scheduler:
-  build: services/scheduler
-  env_file: .env
-  restart: always
-alarm:
-  build: services/alarm
-  restart: always
-tsp:
-  build: services/tsp
-  restart: always
-eventbrowser:
-  build: app/web_eventbrowser
-  restart: always
-eventdb:
-  build: services/eventdb
-  command: eventdb -db "postgres://postgres:postgres@postgres/postgres?sslmode=disable"
-  links:
-    - postgres
-  restart: always
-selenium:
-  image: selenium/standalone-firefox
-  restart: always
-  command: bash -c "rm /tmp/.X99-lock || echo 'Lock not found, continuing normal startup' && export no_proxy=*.local && /opt/bin/entry_point.sh"
-eventscrape:
-  build: services/eventscrape
-  command: eventscrape -server ":8080" -oauth_callback https://backend.machineexecutive.com/fbcallback -webdriver_addr selenium:4444 http://eventdb:8080/events
-  links:
-    - selenium
-    - eventdb
-distscrape:
-  build: services/distscrape
-  restart: always
-  links:
-    - selenium
-postgres:
-  image: postgres:9.6
-  restart: always
-  environment:
-    - POSTGRES_PASSWORD=postgres
-  volumes:
-    - /var/lib/postgresql/data:/var/lib/postgresql/data
-cron:
-  build: services/cron
-  restart: always
-  links:
-    - eventscrape
-frontend:
-  build: services/frontend
-  links:
-    - alarm
-    - eventbrowser
-    - eventdb
-    - eventscrape
-    - jukebox
-    - placepicker
-    - scheduler
-    - tsp
-    - distscrape
-  volumes:
-    - .caddy:/.caddy
-  ports:
-    - 80:80
-    - 443:443
-  restart: always
+version: '2'
+
+services:
+  placepicker:
+    build: services/placepicker
+    env_file: .env
+    restart: always
+
+  scheduler:
+    build: services/scheduler
+    env_file: .env
+    restart: always
+  alarm:
+    build: services/alarm
+    restart: always
+
+  # Events
+  eventbrowser:
+    build: app/web_eventbrowser
+    restart: always
+  eventdb:
+    build: services/eventdb
+    command: eventdb -db "postgres://postgres:postgres@postgres/postgres?sslmode=disable"
+    restart: always
+  selenium:
+    image: selenium/standalone-firefox
+    restart: always
+    command: bash -c "rm /tmp/.X99-lock || echo 'Lock not found, continuing normal startup' && export no_proxy=*.local && /opt/bin/entry_point.sh"
+  eventscrape:
+    build: services/eventscrape
+    command: eventscrape -server ":8080" -oauth_callback https://backend.machineexecutive.com/fbcallback -webdriver_addr selenium:4444 http://eventdb:8080/events
+
+  postgres:
+    image: postgres:9.6
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - /var/lib/postgresql/data:/var/lib/postgresql/data
+
+  cron:
+    build: services/cron
+    restart: always
+
+  frontend:
+    build: services/frontend
+    volumes:
+      - .caddy:/.caddy
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+
+networks:
+  default:
+    external:
+      name: exec
