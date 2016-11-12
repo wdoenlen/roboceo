@@ -57,11 +57,11 @@ export default class dowser extends Component {
   }
 
   _handleNewHeadingPress() {
-    var lenRange,
-        nextHeading;
+    var nextHeading;
     if (this.state.firstHeading < this.state.secondHeading) {
-      lenRange = this.state.secondHeading - this.state.firstHeading;
-      nextHeading = this._chooseNumInInterval(0, lenRange);
+      nextHeading = this._chooseNumInInterval(
+        this.state.firstHeading, this.state.secondHeading
+      );
     }
     // If the first heading is greater than the second heading then
     // we passed through zero when choosing hte second heading. We need to
@@ -69,7 +69,7 @@ export default class dowser extends Component {
     // (0, secondHeading)
     else {
       var rand = Math.random();
-      lenRange = (360 - this.state.firstHeading) + this.state.secondHeading;
+          lenRange = (360 - this.state.firstHeading) + this.state.secondHeading;
       if (rand < this.secondHeading / lenRange) {
         // Choose number between [0, secondHeading]
         nextHeading = this._chooseNumInInterval(0, this.state.secondHeading);
