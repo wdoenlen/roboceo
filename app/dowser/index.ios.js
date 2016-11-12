@@ -71,11 +71,9 @@ export default class dowser extends Component {
       var rand = Math.random();
           lenRange = (360 - this.state.firstHeading) + this.state.secondHeading;
       if (rand < this.secondHeading / lenRange) {
-        // Choose number between [0, secondHeading]
         nextHeading = this._chooseNumInInterval(0, this.state.secondHeading);
       }
       else {
-        // Choose number between [firstHeading, 360]
         nextHeading = this._chooseNumInInterval(this.state.firstHeading, 360);
       }
     }
