@@ -47,35 +47,39 @@ export default class dowser extends Component {
     DeviceEventEmitter.removeAllListeners('headingUpdated');
   }
 
-  _handleNewHeadingPress() {
-    if (this.state.firstHeading < this.state.secondHeading) {
-      this.setState({
-        nextHeading: this.state.firstHeading
-        + Math.random() * (this.state.secondHeading - this.state.firstHeading)
-      });
+  _chooseNumInInterval(a, b, r) {
+    if (typeof r === "undefined") {
+      r = Math.random()
     }
+    var lower = Math.min(a, b),
+        upper = Math.max(a, b);
+    return lower + r * (upper - lower);
+  }
+
+  _handleNewHeadingPress() {
+    var lenRange,
+        nextHeading;
+    if (this.state.firstHeading < this.state.secondHeading) {
+      lenRange = this.state.secondHeading - this.state.firstHeading;
+      nextHeading = this._chooseNumInInterval(0, lenRange);
+    }
+    // If the first heading is greater than the second heading then
+    // we passed through zero when choosing hte second heading. We need to
+    // choose a random number, then, between (firstHeading, 360) and
+    // (0, secondHeading)
     else {
-      // If the first heading is greater than the second heading then
-      // we passed through zero when choosing hte second heading. We need to
-      // choose a random number, then, between (firstHeading, 360) and
-      // (0, secondHeading)
-      var lenRange = this.state.secondHeading + (360 - this.state.firstHeading);
       var rand = Math.random();
-      if (rand < this.state.secondHeading / lenRange) {
-        this.setState({
-          nextHeading: rand * this.state.secondHeading *
-            (lenRange / this.state.secondHeading)
-        });
+      lenRange = (360 - this.state.firstHeading) + this.state.secondHeading;
+      if (rand < this.secondHeading / lenRange) {
+        // Choose number between [0, secondHeading]
+        nextHeading = this._chooseNumInInterval(0, this.state.secondHeading);
       }
       else {
-        this.setState({
-          nextHeading: this.state.firstHeading +
-            rand * (360 - this.state.firstHeading) *
-            (lenRange / (360 - this.state.firstHeading)
-        });
+        // Choose number between [firstHeading, 360]
+        nextHeading = this._chooseNumInInterval(this.state.firstHeading, 360);
       }
-
     }
+    this.setState({nextHeading: nextHeading});
   }
 
   _handleSetFirstHeadingPress() {
