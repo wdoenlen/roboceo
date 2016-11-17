@@ -23,8 +23,8 @@ export default class dowser extends Component {
     this.state = {
       currentHeading: -1,
       nextHeading: Math.random() * 360,
-      firstHeading: 0,
-      secondHeading: 360
+      firstHeading: 340,
+      secondHeading: 20
     };
   }
 
@@ -49,7 +49,7 @@ export default class dowser extends Component {
 
   _chooseNumInInterval(a, b, r) {
     if (typeof r === "undefined") {
-      r = Math.random()
+      r = Math.random();
     }
     var lower = Math.min(a, b),
         upper = Math.max(a, b);
@@ -70,10 +70,9 @@ export default class dowser extends Component {
     else {
       var rand = Math.random();
           lenRange = (360 - this.state.firstHeading) + this.state.secondHeading;
-      if (rand < this.secondHeading / lenRange) {
+      if (rand < this.state.secondHeading / lenRange) {
         nextHeading = this._chooseNumInInterval(0, this.state.secondHeading);
-      }
-      else {
+      } else {
         nextHeading = this._chooseNumInInterval(this.state.firstHeading, 360);
       }
     }
