@@ -437,7 +437,7 @@
 						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 					13B07F861A680F5B00A75B9A = {
-						DevelopmentTeam = L8AM5H9SDR;
+						DevelopmentTeam = CNPR6U96WZ;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -756,7 +756,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = NO;
-				DEVELOPMENT_TEAM = L8AM5H9SDR;
+				DEVELOPMENT_TEAM = CNPR6U96WZ;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -769,6 +769,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.machineexecutive.dowser;
 				PRODUCT_NAME = dowser;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -781,7 +782,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = L8AM5H9SDR;
+				DEVELOPMENT_TEAM = CNPR6U96WZ;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -794,6 +795,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.machineexecutive.dowser;
 				PRODUCT_NAME = dowser;
 				VERSIONING_SYSTEM = "apple-generic";
 			};

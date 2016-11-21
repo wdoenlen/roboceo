@@ -23,8 +23,8 @@ export default class dowser extends Component {
     this.state = {
       currentHeading: -1,
       nextHeading: Math.random() * 360,
-      firstHeading: 340,
-      secondHeading: 20
+      firstHeading: 0,
+      secondHeading: 360
     };
   }
 
