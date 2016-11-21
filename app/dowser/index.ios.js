@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Image,
   DeviceEventEmitter
 } from 'react-native';
 import Button from 'react-native-button';
@@ -45,6 +46,16 @@ export default class dowser extends Component {
   componentWillUnmount() {
     ReactNativeHeading.stop();
     DeviceEventEmitter.removeAllListeners('headingUpdated');
+  }
+
+  getArrowAngle() {
+    if (this.state.currentHeading > 0 && this.state.nextHeading > 0) {
+      return (
+        this.state.currentHeading - this.state.nextHeading).toString() + "deg";
+    }
+    else {
+      return "0deg";
+    }
   }
 
   _chooseNumInInterval(a, b, r) {
@@ -97,6 +108,17 @@ export default class dowser extends Component {
   render() {
     return (
       <View style={styles.container}>
+        <Image
+          source={require("./arrow.png")}
+          style={{
+            height: 300,
+            width: 200,
+            transform: [
+              {scale: 0.5},
+              {rotate: this.getArrowAngle()}
+            ]
+          }}
+        />
         <Text style={styles.welcome}>
           Please head towards {Math.round(this.state.nextHeading * 100) / 100}
         </Text>
@@ -133,7 +155,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#FFF',
   },
   welcome: {
     fontSize: 20,
